@@ -95,7 +95,7 @@ exports.joinMeeting = async (req, res) => {
     
     res.json({
       token: jwt,
-      url: process.env.LIVEKIT_URL,
+      url: process.env.PUBLIC_LIVEKIT_URL,
       room: id,
     });
     

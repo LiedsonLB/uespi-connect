@@ -1,17 +1,27 @@
-# Build step
-FROM node:18 as build
+# ---------- BUILD ----------
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
+COPY package*.json ./
+
+RUN npm ci
+
 COPY . .
 
-RUN yarn install && yarn build
+RUN npm run build
 
-# NGINX server step
+
+# ---------- PRODUCTION ----------
 FROM nginx:alpine
 
-COPY --from=build /app/build /usr/share/nginx/html
+# remove config padrão do nginx
+RUN rm -rf /usr/share/nginx/html/*
 
+# copia build final
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# copia config custom
 COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80

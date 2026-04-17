@@ -1,6 +1,5 @@
-version: "3.9"
-
 services:
+
   postgres:
     image: postgres:15
     container_name: uespi-postgres
@@ -9,34 +8,48 @@ services:
       POSTGRES_DB: uespi_connect
       POSTGRES_USER: uespi_user
       POSTGRES_PASSWORD: uespi123
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - studio-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U uespi_user -d uespi_connect"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: uespi-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - livekit
+    networks:
+      - studio-network
+
+  frontend:
+    build: ./frontend
+    container_name: uespi-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - studio-network
 
   livekit:
     image: livekit/livekit-server:latest
     container_name: livekit
     restart: unless-stopped
     ports:
-      - "7880:7880"           # API e WebSocket
-      - "7881:7881"           # TCP (fallback)
-      - "7882:7882/udp"       # UDP (WebRTC)
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
     environment:
       LIVEKIT_API_KEY: devkey
       LIVEKIT_API_SECRET: secret
-      LIVEKIT_RTC_PORT_TCP: 7881
-      LIVEKIT_RTC_PORT_UDP: 7882
       LIVEKIT_RTC_USE_EXTERNAL_IP: "true"
-      LIVEKIT_RTC_STUN_SERVERS: '["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302"]'
-      LIVEKIT_RTC_TURN_SERVERS: '[{"urls":["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:443"],"username":"openrelayproject","credential":"openrelayproject"}]'
     command:
       - --dev
       - --bind=0.0.0.0
@@ -44,25 +57,20 @@ services:
       - ./livekit-data:/data
     networks:
       - studio-network
-    depends_on:
-      - postgres
 
   adminer:
-    image: adminer:latest
+    image: adminer
     container_name: uespi-adminer
     restart: unless-stopped
     ports:
       - "8080:8080"
-    environment:
-      ADMINER_DEFAULT_SERVER: postgres
-    networks:
-      - studio-network
     depends_on:
       - postgres
+    networks:
+      - studio-network
 
 volumes:
   postgres_data:
-    driver: local
 
 networks:
   studio-network:

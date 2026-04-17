@@ -31,7 +31,7 @@ exports.createToken = async (req, res) => {
         
         res.json({
             token: token,
-            url: process.env.LIVEKIT_URL
+            url: process.env.PUBLIC_LIVEKIT_URL
         });
         
     } catch (err) {

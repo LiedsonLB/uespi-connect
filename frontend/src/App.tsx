@@ -27,7 +27,6 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 function ProtectedRoutes() {
   const { isLoggedIn, role, loading } = useAuth();
 
-  // Mostrar loading enquanto verifica sessão
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
