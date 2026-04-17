@@ -1,5 +1,5 @@
 // frontend/src/lib/api.ts
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://177.136.252.12';
 
 export const apiFetch = async (endpoint: string, options?: RequestInit) => {
   // Garante que o endpoint comece com /api
