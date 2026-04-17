@@ -3,6 +3,7 @@ import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 
 interface GoogleUser {
   email: string;
@@ -185,6 +186,21 @@ const LoginPage = () => {
         <div className="flex justify-center gap-5">
           <GoogleLoginButton onLogin={handleLogin} disabled={loading} />
         </div>
+
+        <Button
+          className="mt-4 w-[250px]"
+          variant="secondary"
+          onClick={() =>
+            handleLogin({
+              email: "test@aluno.uespi.br",
+              name: "Aluno Teste",
+              picture: "",
+              sub: "1234567890",
+            })
+          }
+        >
+          Entrar como Teste (Aluno)
+        </Button>
 
         <p className="text-xs text-muted-foreground text-center mt-8">
           Plataforma de colaboração acadêmica da UESPI · Versão Demo
