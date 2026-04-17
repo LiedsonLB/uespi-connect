@@ -91,9 +91,6 @@ jobs:
             -p 7880:7880 \
             -p 7881:7881 \
             -p 7882:7882/udp \
-            -e LIVEKIT_KEYS="devkey" \
-            -e LIVEKIT_API_SECRET="secret" \
-            -e LIVEKIT_RTC_USE_EXTERNAL_IP="true" \
             -v ${{ github.workspace }}/livekit.yaml:/livekit.yaml \
             livekit/livekit-server:latest \
             --config /livekit.yaml
