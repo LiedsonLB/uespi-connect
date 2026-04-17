@@ -1,0 +1,62 @@
+[
+  {
+    "id": "e9cd309ccc",
+    "username": "admin",
+    "passwordHash": "$2a$10$qh81zk8YmlQHTD0dXmA61Ot47T9TEb.HHrbr.oW5XsPl01MVg9nBS",
+    "role": "admin",
+    "channel": null,
+    "active": true
+  },
+  {
+    "id": "83b1d3f10d",
+    "username": "tv1",
+    "passwordHash": "$2a$10$MJGGEiJY6uCyBWXACffEgeL8B1PvEm897GIsdo0XnTiOVRaH5uSNW",
+    "role": "user",
+    "channel": "tv1",
+    "active": true
+  },
+  {
+    "id": "b3ca39d8f6",
+    "username": "tv2",
+    "passwordHash": "$2a$10$PRrcqi3x2ps6ssAsHPrFLOXAgON7gZ7zOvqeNbWyJ/nb5LFzvgZei",
+    "role": "user",
+    "channel": "tv2",
+    "active": true
+  },
+  {
+    "id": "66617bc43c",
+    "username": "fliedsonbbarros@aluno.uespi.br",
+    "password": "google_1149787160",
+    "role": "user",
+    "channel": null,
+    "passwordHash": "$2a$10$LldP0KkTreEg/g.N6L/tFe.88Y7vio0FLqJUXwZdkxUDqQyypMbtS",
+    "active": true
+  },
+  {
+    "id": "7ccdc4a4b6",
+    "username": "lbzera143@gmail.com",
+    "password": "google_1062185433",
+    "role": "admin",
+    "channel": null,
+    "passwordHash": "$2a$10$sXn.YZaKtSUGr66/M77CMOjq.OYNNQ0QOblvzKrpPlOlKgWTUTJ4O",
+    "active": true
+  },
+  {
+    "id": "50cddbdd70",
+    "username": "liedson.b9@gmail.com",
+    "password": "google_1022587480",
+    "role": "admin",
+    "channel": null,
+    "passwordHash": "$2a$10$KLhGJhcgN/TX7Kd/rffCQObe.Wi8A9KX1XYDsJ8DqbmwEJbY9GpeK",
+    "active": true
+  },
+  {
+    "id": "29b8020a0a",
+    "username": "klebersongeromel@gmail.com",
+    "password": "google_1105097153",
+    "role": "admin",
+    "channel": null,
+    "passwordHash": "$2a$10$TMQ2lncYQJsa.RBFHzRZGuuIDjnIXckzc/BXiFwpcD.LBJ5dgz/Wa",
+    "active": true
+  }
+]
