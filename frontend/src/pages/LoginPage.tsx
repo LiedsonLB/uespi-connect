@@ -70,9 +70,6 @@ const LoginPage = () => {
       // senha determinística baseada no Google ID
       const password = `google_${sub.substring(0, 10)}`;
 
-      // =========================
-      // 1️⃣ TENTAR LOGIN
-      // =========================
       let response = await apiFetch("/login", {
         method: "POST",
         body: JSON.stringify({
@@ -82,10 +79,7 @@ const LoginPage = () => {
       });
 
       let data = await response.json();
-
-      // =========================
-      // LOGIN OK
-      // =========================
+      
       if (response.ok && data.success) {
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("sessionId", data.user.id);
