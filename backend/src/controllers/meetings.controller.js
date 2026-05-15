@@ -76,11 +76,19 @@ exports.joinMeeting = async (req, res) => {
     }
     
     await meetingsService.incrementParticipants(id);
-    
+
+    // Pega a foto de perfil da sessão do usuário logado
+    const profilePicture = req.session?.user?.profilePicture || '';
+
     const token = new AccessToken(
       process.env.LIVEKIT_API_KEY,
       process.env.LIVEKIT_API_SECRET,
-      { identity, name: name || identity, ttl: '2h' }
+      {
+        identity,
+        name: name || identity,
+        ttl: '2h',
+        metadata: JSON.stringify({ profilePicture }),
+      }
     );
     
     token.addGrant({
@@ -138,30 +146,30 @@ exports.getMeetingParticipants = async (req, res) => {
 };
 
 exports.leaveMeeting = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { identity } = req.body;
-        
-        console.log(`👋 Usuário ${identity} saindo da sala ${id}`);
-        
-        const meeting = meetingsService.getMeetingById(id);
-        
-        if (!meeting) {
-            return res.status(404).json({ error: 'Reunião não encontrada' });
-        }
-        
-        const newCount = Math.max(0, (meeting.participants || 0) - 1);
-        await meetingsService.updateMeeting(id, { participants: newCount });
-        
-        console.log(`📊 Participantes restantes na sala ${id}: ${newCount}`);
-        
-        res.json({ 
-            success: true, 
-            participants: newCount 
-        });
-        
-    } catch (err) {
-        console.error('❌ Erro ao sair da reunião:', err);
-        res.status(500).json({ error: 'Falha ao sair da reunião' });
+  try {
+    const { id } = req.params;
+    const { identity } = req.body;
+    
+    console.log(`👋 Usuário ${identity} saindo da sala ${id}`);
+    
+    const meeting = await meetingsService.getMeetingById(id);
+    
+    if (!meeting) {
+      return res.status(404).json({ error: 'Reunião não encontrada' });
     }
+    
+    const newCount = Math.max(0, (meeting.participants || 0) - 1);
+    await meetingsService.updateMeeting(id, { participants: newCount });
+    
+    console.log(`📊 Participantes restantes na sala ${id}: ${newCount}`);
+    
+    res.json({ 
+      success: true, 
+      participants: newCount 
+    });
+    
+  } catch (err) {
+    console.error('❌ Erro ao sair da reunião:', err);
+    res.status(500).json({ error: 'Falha ao sair da reunião' });
+  }
 };

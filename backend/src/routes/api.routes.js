@@ -36,14 +36,14 @@ router.post('/login', (req, res) => {
   // Se usuário não existe, criar automaticamente
   if (!user) {
     console.log('📝 Usuário não encontrado, criando automaticamente...');
-    
+
     // Determinar role baseada no email
     let role = 'user';
     if (username.includes('@aluno.uespi.br')) role = 'aluno';
     else if (username.includes('@uespi.br')) role = 'professor';
     else if (username.includes('@prp.uespi.br')) role = 'professor';
     else if (username.includes('@gmail.com')) role = 'admin';
-    
+
     // Criar o usuário
     user = dataService.createUser({
       username: username,
@@ -51,12 +51,12 @@ router.post('/login', (req, res) => {
       role: role,
       channel: null
     });
-    
+
     if (!user) {
       console.log('❌ Erro ao criar usuário:', username);
       return res.status(500).json({ error: 'Erro ao criar usuário' });
     }
-    
+
     console.log('✅ Usuário criado automaticamente:', username, 'Role:', role);
     // Recarregar usuários
     users = dataService.getUsers();
@@ -126,6 +126,24 @@ router.get('/me', (req, res) => {
   res.json(req.session.user);
 });
 
+router.get('/users/by-email/:email', async (req, res) => {
+  const { email } = req.params;
+  try {
+    const user = await usersService.findUserByUsername(email);
+    if (user) {
+      res.json({
+        profilePicture: user.profile_picture,
+        name: user.name,
+        email: user.username
+      });
+    } else {
+      res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
 // Listar canais
 router.get('/channels', (req, res) => {
   console.log('🔍 /channels - Session ID:', req.sessionID);
@@ -150,7 +168,7 @@ router.get('/admin/users', (req, res) => {
   if (!req.session.user || req.session.user.role !== 'admin') {
     return res.status(403).json({ error: 'Acesso negado' });
   }
-  
+
   const users = dataService.getUsers();
   res.json(users.map(u => ({
     id: u.id,
