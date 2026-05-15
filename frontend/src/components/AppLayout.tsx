@@ -38,13 +38,13 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: "Painel", icon: LayoutDashboard, path: "/", roles: ["admin", "professor", "aluno"] },
-  { title: "Turmas", icon: GraduationCap, path: "/classes", roles: ["professor", "aluno"] },
+  // { title: "Painel", icon: LayoutDashboard, path: "/", roles: ["admin", "professor", "aluno"] },
+  // { title: "Turmas", icon: GraduationCap, path: "/classes", roles: ["professor", "aluno"] },
   { title: "Reuniões", icon: Video, path: "/meetings", roles: ["admin", "professor", "aluno"] },
   { title: "Eventos", icon: Radio, path: "/events", roles: ["admin", "professor", "aluno"] },
-  { title: "Chat", icon: MessageCircle, path: "/chat", roles: ["professor", "aluno"] },
+  // { title: "Chat", icon: MessageCircle, path: "/chat", roles: ["professor", "aluno"] },
   { title: "Arquivos", icon: FolderOpen, path: "/files", roles: ["professor", "aluno"] },
-  { title: "Calendário", icon: Calendar, path: "/calendar", roles: ["admin", "professor", "aluno"] },
+  // { title: "Calendário", icon: Calendar, path: "/calendar", roles: ["admin", "professor", "aluno"] },
   { title: "Perfil", icon: User, path: "/profile", roles: ["admin", "professor", "aluno"] },
   { title: "Administração", icon: Shield, path: "/admin", roles: ["admin"] },
 ];

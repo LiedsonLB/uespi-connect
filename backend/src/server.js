@@ -37,11 +37,13 @@ const corsOptions = {
       'http://localhost:3000',
       'http://177.136.252.12',
       'http://127.0.0.1:3000',
-      'http://localhost',           // <-- ADICIONADO
-      'http://localhost:80',         // <-- ADICIONADO
-      'http://localhost:8080',       // <-- ADICIONADO
-      'http://127.0.0.1',            // <-- ADICIONADO
-      'http://127.0.0.1:80'          // <-- ADICIONADO
+      'http://localhost',
+      'http://localhost:80',
+      'http://localhost:8080',
+      'http://127.0.0.1',
+      'http://127.0.0.1:80',
+      'http://neomeet.amsolution.net.br',
+      'https://neomeet.amsolution.net.br',
     ];
     
     console.log('🔍 CORS - Origem recebida:', origin);
@@ -70,7 +72,9 @@ const io = new Server(server, {
       'http://localhost:3000',
       'http://127.0.0.1:3000',
       'http://localhost',
-      'http://localhost:80'
+      'http://localhost:80',
+      'http://neomeet.amsolution.net.br',
+      'https://neomeet.amsolution.net.br',
     ],
     credentials: true,
     methods: ["GET", "POST"]
