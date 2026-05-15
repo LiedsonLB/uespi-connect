@@ -13,8 +13,8 @@ import { toast } from "sonner";
 interface Meeting {
   id: string;
   title: string;
-  createdAt: string;
-  createdBy?: string;
+  created_at: string;
+  created_by?: string;
   participants?: number;
 }
 
@@ -45,7 +45,7 @@ export default function MeetingsListPage() {
     } catch (error) {
       console.error(`Erro ao buscar participantes da sala ${roomName}:`, error);
     }
-    
+
     // Fallback: retorna 0 se não conseguir buscar
     return 0;
   };
@@ -55,7 +55,7 @@ export default function MeetingsListPage() {
       setIsLoading(true);
       const res = await apiFetch("/api/meetings");
       const data = await res.json();
-      
+
       // Buscar contagem real de participantes para cada reunião
       const meetingsWithRealParticipants = await Promise.all(
         data.map(async (meeting: Meeting) => {
@@ -66,7 +66,7 @@ export default function MeetingsListPage() {
           };
         })
       );
-      
+
       setMeetings(meetingsWithRealParticipants);
     } catch (error) {
       console.error("Erro ao carregar reuniões:", error);
@@ -78,14 +78,14 @@ export default function MeetingsListPage() {
 
   const createMeeting = async () => {
     const title = newMeetingTitle.trim() || `Reunião ${new Date().toLocaleString()}`;
-    
+
     setIsCreating(true);
     try {
       const res = await apiFetch("/api/meetings", {
         method: "POST",
         body: JSON.stringify({ title })
       });
-      
+
       const meeting = await res.json();
       setShowCreateDialog(false);
       setNewMeetingTitle("");
@@ -187,8 +187,8 @@ export default function MeetingsListPage() {
             {role === "professor" ? "Minhas Reuniões" : "Reuniões Disponíveis"}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {role === "professor" 
-              ? "Gerencie suas videoconferências e aulas ao vivo" 
+            {role === "professor"
+              ? "Gerencie suas videoconferências e aulas ao vivo"
               : "Participe das suas reuniões e aulas ao vivo"}
           </p>
         </div>
@@ -245,8 +245,8 @@ export default function MeetingsListPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {meetings.map((meeting, index) => (
-            <Card 
-              key={meeting.id} 
+            <Card
+              key={meeting.id}
               className="card-shadow hover:card-shadow-hover transition-all group overflow-hidden"
             >
               <div className={`h-2 ${getGradientColor(index)}`} />
@@ -315,7 +315,10 @@ export default function MeetingsListPage() {
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" />
-                    {new Date(meeting.createdAt).toLocaleDateString()}
+                    {new Date(meeting.created_at).toLocaleString("pt-BR", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
                   </span>
                 </div>
 
@@ -327,16 +330,16 @@ export default function MeetingsListPage() {
                     </span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full ${getGradientColor(index)} transition-all`} 
+                    <div
+                      className={`h-full rounded-full ${getGradientColor(index)} transition-all`}
                       style={{ width: `${Math.min(100, (meeting.participants || 0) * 10)}%` }}
                     />
                   </div>
                 </div>
 
                 <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     className={`flex-1 ${getGradientColor(index)} border-0 text-primary-foreground`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -345,9 +348,9 @@ export default function MeetingsListPage() {
                   >
                     <Video className="w-3.5 h-3.5 mr-1.5" /> Entrar
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
+                  <Button
+                    size="sm"
+                    variant="outline"
                     className="flex-1"
                     onClick={(e) => copyMeetingLink(meeting.id, e)}
                   >

@@ -7,6 +7,8 @@ on:
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+  VITE_LIVEKIT_URL: ${{ secrets.VITE_LIVEKIT_URL }}
 
 jobs:
 
@@ -30,8 +32,8 @@ jobs:
         working-directory: ./frontend
         run: |
           docker build \
-          --build-arg VITE_GOOGLE_CLIENT_ID=356082850571-rhdr5ji6dclahh910i04mr86cccoi012.apps.googleusercontent.com \
-          --build-arg VITE_LIVEKIT_URL=${{ secrets.VITE_LIVEKIT_URL }} \
+          --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.VITE_GOOGLE_CLIENT_ID }} \
+          --build-arg VITE_LIVEKIT_URL=${{ env.VITE_LIVEKIT_URL }} \
           -t $DOCKERHUB_USERNAME/uespi-frontend:latest .
           docker push $DOCKERHUB_USERNAME/uespi-frontend:latest
 
