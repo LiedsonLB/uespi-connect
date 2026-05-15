@@ -29,7 +29,10 @@ jobs:
       - name: Build Frontend
         working-directory: ./frontend
         run: |
-          docker build -t $DOCKERHUB_USERNAME/uespi-frontend:latest .
+          docker build \
+          --build-arg VITE_GOOGLE_CLIENT_ID=356082850571-rhdr5ji6dclahh910i04mr86cccoi012.apps.googleusercontent.com \
+          --build-arg VITE_LIVEKIT_URL=${{ secrets.VITE_LIVEKIT_URL }} \
+          -t $DOCKERHUB_USERNAME/uespi-frontend:latest .
           docker push $DOCKERHUB_USERNAME/uespi-frontend:latest
 
       # BACKEND NODE
