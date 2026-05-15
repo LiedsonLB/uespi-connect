@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 const events = [
   { title: "Semana de Tecnologia UESPI 2026", date: "20-24 Mar", time: "09:00 - 18:00", attendees: 450, live: true, type: "Conferência" },
   { title: "Workshop: Introdução ao Machine Learning", date: "18 Mar", time: "14:00 - 17:00", attendees: 80, live: false, type: "Workshop" },
-  { title: "Palestra: Carreira em TI", date: "25 Mar", time: "19:00 - 21:00", attendees: 200, live: false, type: "Palestra" },
-  { title: "Hackathon UESPI 2026", date: "5-6 Abr", time: "Dia inteiro", attendees: 120, live: false, type: "Hackathon" },
-  { title: "Defesa de TCC - Turma 2025", date: "10 Abr", time: "08:00 - 12:00", attendees: 60, live: false, type: "Acadêmico" },
-  { title: "Aula Magna: O Futuro da Computação", date: "15 Abr", time: "10:00 - 12:00", attendees: 300, live: false, type: "Palestra" },
+  // { title: "Palestra: Carreira em TI", date: "25 Mar", time: "19:00 - 21:00", attendees: 200, live: false, type: "Palestra" },
+  // { title: "Hackathon UESPI 2026", date: "5-6 Abr", time: "Dia inteiro", attendees: 120, live: false, type: "Hackathon" },
+  // { title: "Defesa de TCC - Turma 2025", date: "10 Abr", time: "08:00 - 12:00", attendees: 60, live: false, type: "Acadêmico" },
+  // { title: "Aula Magna: O Futuro da Computação", date: "15 Abr", time: "10:00 - 12:00", attendees: 300, live: false, type: "Palestra" },
 ];
 
 const EventsPage = () => {
@@ -22,7 +22,7 @@ const EventsPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {events.map((event) => (
-          <Card key={event.title} className="card-shadow hover:card-shadow-hover transition-all overflow-hidden group cursor-pointer">
+          <Card key={event.title} className="card-shadow hover:card-shadow-hover transition-all overflow-hidden group">
             <div className="h-32 gradient-primary relative flex items-center justify-center">
               <Radio className="w-12 h-12 text-primary-foreground/30" />
               {event.live && (
