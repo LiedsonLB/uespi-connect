@@ -162,7 +162,7 @@ export default function MeetingsListPage() {
   const getGradientColor = (index: number) => {
     const colors = [
       "gradient-primary",
-      "gradient-success",
+      "gradient-secondary",
     ];
     return colors[index % colors.length];
   };
@@ -182,7 +182,10 @@ export default function MeetingsListPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Minhas Reuniões</h1>
+          {/* reuniões de todo mundo */}
+          <h1 className="text-2xl font-bold text-foreground">
+            {role === "professor" ? "Minhas Reuniões" : "Reuniões Disponíveis"}
+          </h1>
           <p className="text-muted-foreground mt-1">
             {role === "professor" 
               ? "Gerencie suas videoconferências e aulas ao vivo" 
@@ -244,8 +247,7 @@ export default function MeetingsListPage() {
           {meetings.map((meeting, index) => (
             <Card 
               key={meeting.id} 
-              className="card-shadow hover:card-shadow-hover transition-all group cursor-pointer overflow-hidden"
-              onClick={() => joinMeeting(meeting.id)}
+              className="card-shadow hover:card-shadow-hover transition-all group overflow-hidden"
             >
               <div className={`h-2 ${getGradientColor(index)}`} />
               <CardContent className="p-5">

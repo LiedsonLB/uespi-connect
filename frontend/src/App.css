@@ -23,6 +23,10 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+.gradient-secondary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
 .gradient-success {
   background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 }

@@ -112,6 +112,10 @@
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
   }
 
+  .gradient-secondary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
   .gradient-success {
     background: linear-gradient(135deg, hsl(var(--secondary)), hsl(145 60% 50%));
   }

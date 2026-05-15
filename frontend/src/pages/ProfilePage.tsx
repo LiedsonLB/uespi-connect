@@ -28,9 +28,19 @@ const ProfilePage = () => {
       <Card className="card-shadow overflow-hidden">
         <div className="h-32 gradient-primary relative" />
         <CardContent className="px-6 pb-6 relative">
-          <div className="flex items-end gap-5 -mt-12">
-            <div className="w-24 h-24 rounded-2xl bg-card border-4 border-card flex items-center justify-center shadow-lg">
-              <span className="text-2xl font-bold text-primary">{user?.initials}</span>
+          <div className="flex items-end gap-5">
+            <div className="w-24 h-24 rounded-2xl bg-card border-4 border-card flex items-center justify-center shadow-lg overflow-hidden">
+              {user?.profilePicture ? (
+                <img
+                  src={user.profilePicture}
+                  alt="Foto de perfil"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl font-bold text-primary">
+                  {user?.name?.[0] ?? "U"}
+                </span>
+              )}
             </div>
             <div className="pb-1 flex-1">
               <div className="flex items-center justify-between">
@@ -70,10 +80,10 @@ const ProfilePage = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Estatísticas de Frequência</CardTitle>
-              <Badge variant="secondary" className="bg-secondary/10 text-secondary border-0">92% Geral</Badge>
+              <Badge variant="secondary" className="bg-primary/10 text-primary border-0">0% Geral</Badge>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          {/* <CardContent className="space-y-4">
             {attendanceHistory.map((course) => (
               <div key={course.course} className="space-y-1.5">
                 <div className="flex justify-between text-sm">
@@ -83,7 +93,7 @@ const ProfilePage = () => {
                 <Progress value={course.pct} className="h-2" />
               </div>
             ))}
-          </CardContent>
+          </CardContent> */}
         </Card>
       </div>
     </div>

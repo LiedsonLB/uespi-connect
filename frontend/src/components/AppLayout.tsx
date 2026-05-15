@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   Menu,
   LogOut,
+  User2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,26 +84,30 @@ export function AppLayout({ children }: AppLayoutProps) {
       >
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-border gap-3">
-          {/* <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0">
-            <img src="/favicon1.ico" alt="Logo" className="" /> */}
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0">
-            <img src="/favicon.ico" alt="" />
-          </div>
+
+          {/* Sidebar aberta */}
           {!collapsed && (
-            <div className="animate-fade-in">
-              <h1 className="text-base font-bold text-foreground leading-tight">UESPI Hub</h1>
-              <p className="text-[10px] text-muted-foreground leading-tight">Campus Digital</p>
-              {/* <h1 className="text-base font-bold text-foreground leading-tight">Viva Meet</h1>
-              <p className="text-[10px] text-muted-foreground leading-tight">Consulta Digital</p> */}
+            <div className="w-32 h-9 flex items-center justify-center flex-shrink-0">
+              <img src="/neomeet_logo_cut.png" alt="NeoMeet Logo" />
             </div>
           )}
+
+          {/* Sidebar fechada */}
+          {collapsed && (
+            <div className="w-9 h-9 flex items-center justify-center flex-shrink-0">
+              <img src="/neomeet_icon_cut.png" alt="NeoMeet Icon" />
+            </div>
+          )}
+
         </div>
 
         {/* Role badge */}
         {!collapsed && role && (
           <div className="px-4 py-2">
-            <Badge variant="secondary" className="text-[10px] w-full justify-center">
-              {roleBadge[role]}
+            <Badge variant="outline" className="w-full justify-start">
+              <div className="flex items-center gap-1 font-medium px-2 py-1">
+                <User2 className="w-3.5 h-3.5 mr-1.5" /> {roleBadge[role]}
+              </div>
             </Badge>
           </div>
         )}
@@ -110,15 +115,20 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Nav */}
         <nav className="flex-1 py-2 px-2 space-y-1 overflow-y-auto">
           {filteredNav.map((item) => {
-            const isActive = location.pathname === item.path;
+            // colocar condição da rota / que é o meetings, pq tem que ser ativa tanto para /meetings quanto para /meeting/:roomName
+            const isActive =
+              location.pathname === item.path ||
+              (item.path === "/meetings" &&
+                (location.pathname === "/" ||
+                  location.pathname.startsWith("/meeting/")));
             return (
               <Tooltip key={item.path} delayDuration={collapsed ? 100 : 1000}>
                 <TooltipTrigger asChild>
                   <Link
                     to={item.path}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                   >
                     <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -177,11 +187,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
+{/* 
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="w-5 h-5 text-foreground" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full animate-pulse-dot" />
-            </Button>
+            </Button> */}
           </div>
         </header>
 

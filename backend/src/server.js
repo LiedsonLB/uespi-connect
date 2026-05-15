@@ -34,6 +34,7 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:5500',
       'http://127.0.0.1:5500',
+      'http://localhost:5173',
       'http://localhost:3000',
       'http://177.136.252.12',
       'http://127.0.0.1:3000',
@@ -71,6 +72,7 @@ const io = new Server(server, {
       'http://127.0.0.1:5500',
       'http://localhost:3000',
       'http://127.0.0.1:3000',
+      'http://localhost:5173',
       'http://localhost',
       'http://localhost:80',
       'http://neomeet.amsolution.net.br',

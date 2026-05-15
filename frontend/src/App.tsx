@@ -43,7 +43,7 @@ function ProtectedRoutes() {
   return (
     <AppLayout>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<MeetingsListPage />} />
         <Route path="/classes" element={<ClassesPage />} />
         <Route path="/meetings" element={<MeetingsListPage />} />
         <Route path="/meeting/:roomName" element={<MeetingPage />} />

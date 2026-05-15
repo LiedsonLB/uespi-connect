@@ -46,10 +46,10 @@ const LoginPage = () => {
 
     const getCourseFromEmail = (email: string): string | undefined => {
       if (email.includes("@aluno.uespi.br"))
-        return "Ciência da Computação — 6º Período";
+        return "Ciência da Computação — 8º Período";
 
-      if (email.includes("@uespi.br"))
-        return "Ciência da Computação";
+      if (email.includes("@prp.uespi.br"))
+        return "Professor(a) de Ciência da Computação";
 
       return undefined;
     };
@@ -79,7 +79,7 @@ const LoginPage = () => {
       });
 
       let data = await response.json();
-      
+
       if (response.ok && data.success) {
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("sessionId", data.user.id);
@@ -147,22 +147,22 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="text-center mb-10 animate-fade-in">
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <img src="/favicon.ico" alt="UESPI Hub Logo" />
+        <div className="w-24 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <img src="/neomeet_icon_cut.png" alt="UESPI Hub Logo" />
         </div>
 
         <h1 className="text-3xl font-bold text-foreground">
-          UESPI Connect
+          NeoMeet
         </h1>
 
         <p className="text-muted-foreground mt-2">
-          Universidade Estadual do Piauí
+          Plataforma de reuniões e colaboração acadêmica
         </p>
       </div>
 
       <div className="w-full max-w-3xl">
         <h2 className="text-lg font-semibold text-foreground text-center mb-6">
-          Faça login com seu email institucional para acessar o UESPI Connect
+          Faça login com seu email institucional para acessar o NeoMeet
         </h2>
 
         {error && (
@@ -181,26 +181,33 @@ const LoginPage = () => {
           <GoogleLoginButton onLogin={handleLogin} disabled={loading} />
         </div>
 
-        <Button
-          className="mt-4 w-[250px]"
-          variant="secondary"
-          onClick={() =>
-            handleLogin({
-              email: "test@aluno.uespi.br",
-              name: "Aluno Teste",
-              picture: "",
-              sub: "1234567890",
-            })
-          }
-        >
-          Entrar como Teste (Aluno)
-        </Button>
+        <div className="flex justify-center">
+          <Button
+            className="mt-4 w-[250px]"
+            variant="secondary"
+            onClick={() =>
+              handleLogin({
+                email: "test@aluno.uespi.br",
+                name: "Aluno Teste",
+                picture: "",
+                sub: "1234567890",
+              })
+            }
+          >
+            Entrar como Teste (Aluno)
+          </Button>
+        </div>
 
         <p className="text-xs text-muted-foreground text-center mt-8">
-          Plataforma de colaboração acadêmica da UESPI · Versão Demo
+          Plataforma de reuniões e colaboração NeoMeet · Versão 1.0.0
           <br />
-          <span className="opacity-75">
-            Usando Studio Link Backend
+          <br />
+          <span className="opacity-75" style={{ lineHeight: 2 }}>
+            Todos os direitos reservados © 2026
+            <br />
+            Desenvolvido por <a href="https://github.com/liedsonlb" style={{ color: 'inherit', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">
+              Liedson Barros
+            </a>
           </span>
         </p>
       </div>
