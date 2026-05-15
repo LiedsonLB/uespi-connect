@@ -106,7 +106,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="px-4 py-2">
             <Badge variant="outline" className="w-full justify-start">
               <div className="flex items-center gap-1 font-medium px-2 py-1">
-                <User2 className="w-3.5 h-3.5 mr-1.5" /> {roleBadge[role]}
+                <User2 className="w-3.5 h-3.5 mr-1.5" /> {roleBadge[role].toUpperCase()}
               </div>
             </Badge>
           </div>

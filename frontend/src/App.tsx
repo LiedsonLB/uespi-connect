@@ -24,8 +24,6 @@ const queryClient = new QueryClient();
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-console.log("🚀 Google Client ID:", GOOGLE_CLIENT_ID);
-
 function ProtectedRoutes() {
   const { isLoggedIn, role, loading } = useAuth();
 

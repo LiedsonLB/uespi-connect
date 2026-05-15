@@ -27,6 +27,13 @@ config.initDirectories();
 const app = express();
 const server = http.createServer(app);
 
+// ✅ TRUST PROXY (obrigatório para HTTPS em produção)
+const isProduction = process.env.NODE_ENV === 'production';
+if (isProduction) {
+  app.set('trust proxy', 1);
+  console.log('✅ Trust proxy enabled for production');
+}
+
 // CONFIGURAÇÃO CORS
 const corsOptions = {
   origin: function (origin, callback) {
@@ -90,7 +97,7 @@ const roomController = new RoomController(io);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// CONFIGURAÇÃO DA SESSÃO - CORRIGIDA
+// ✅ CONFIGURAÇÃO DA SESSÃO - CORRIGIDA PARA PRODUÇÃO
 app.use(session({
   secret: config.SESSION_SECRET,
   resave: false,
@@ -98,12 +105,14 @@ app.use(session({
   name: 'studio.sid',
   cookie: {
     httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
+    secure: isProduction,      // ✅ true em produção (HTTPS), false em dev
+    sameSite: isProduction ? 'none' : 'lax',  // ✅ 'none' para cross-domain
     maxAge: 24 * 60 * 60 * 1000, // 24 horas
-    path: '/'
+    path: '/',
+    domain: isProduction ? '.amsolution.net.br' : undefined  // ✅ domain principal
   },
-  rolling: true // Atualiza o cookie a cada requisição
+  rolling: true,
+  proxy: isProduction  // ✅ necessário para HTTPS
 }));
 
 // Middleware de log para debug
@@ -112,6 +121,7 @@ app.use((req, res, next) => {
   console.log('🍪 Cookie:', req.headers.cookie || 'nenhum');
   console.log('🔑 Session ID:', req.sessionID);
   console.log('👤 User:', req.session.user?.username || 'não autenticado');
+  console.log('🌍 Environment:', isProduction ? 'PRODUCTION' : 'DEVELOPMENT');
   console.log('---');
   next();
 });
@@ -132,6 +142,7 @@ app.use(healthRoutes);
 // Start server
 server.listen(config.PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${config.PORT}`);
+  console.log(`🌍 Modo: ${isProduction ? 'PRODUÇÃO' : 'DESENVOLVIMENTO'}`);
   console.log(`📡 API: http://localhost:${config.PORT}/api/health`);
   console.log(`🔑 Login API: POST http://localhost:${config.PORT}/api/login`);
   console.log(`📺 Canais API: GET http://localhost:${config.PORT}/api/channels`);

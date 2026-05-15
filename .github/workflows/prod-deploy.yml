@@ -114,6 +114,7 @@ jobs:
             --restart always \
             --network uespi_net \
             -p 3000:3000 \
+            -e NODE_ENV=production \
             -e DB_HOST=uespi-postgres \
             -e DB_PORT=5432 \
             -e DB_USER=uespi_user \
