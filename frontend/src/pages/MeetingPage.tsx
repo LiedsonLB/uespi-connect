@@ -935,7 +935,7 @@ export default function MeetingPage() {
         });
         const data = await response.json();
         setToken(data.token);
-        setUrl(data.url || import.meta.env.VITE_LIVEKIT_URL || "ws://localhost:7880");
+        setUrl(data.url || import.meta.env.VITE_LIVEKIT_URL || "ws://177.136.252.12:7880");
       } catch (err: any) {
         setError(err.message);
       } finally {
