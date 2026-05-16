@@ -77,7 +77,6 @@ exports.joinMeeting = async (req, res) => {
     
     await meetingsService.incrementParticipants(id);
 
-    // Pega a foto de perfil da sessão do usuário logado
     const profilePicture = req.session?.user?.profilePicture || '';
 
     const token = new AccessToken(

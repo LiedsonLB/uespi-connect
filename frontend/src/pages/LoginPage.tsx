@@ -181,23 +181,6 @@ const LoginPage = () => {
           <GoogleLoginButton onLogin={handleLogin} disabled={loading} />
         </div>
 
-        <div className="flex justify-center">
-          <Button
-            className="mt-4 w-[250px]"
-            variant="secondary"
-            onClick={() =>
-              handleLogin({
-                email: "test@aluno.uespi.br",
-                name: "Aluno Teste",
-                picture: "",
-                sub: "1234567890",
-              })
-            }
-          >
-            Entrar como Teste (Aluno)
-          </Button>
-        </div>
-
         <p className="text-xs text-muted-foreground text-center mt-8">
           Plataforma de reuniões e colaboração NeoMeet · Versão 1.0.0
           <br />
