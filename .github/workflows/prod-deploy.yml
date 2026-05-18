@@ -33,7 +33,7 @@ jobs:
         run: |
           docker build \
           --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.VITE_GOOGLE_CLIENT_ID }} \
-          --build-arg VITE_LIVEKIT_URL=ws://177.136.252.12:7880 \
+          --build-arg VITE_LIVEKIT_URL=wss://neomeet.amsolution.net.br/livekit \
           -t $DOCKERHUB_USERNAME/uespi-frontend:latest .
           docker push $DOCKERHUB_USERNAME/uespi-frontend:latest
           
