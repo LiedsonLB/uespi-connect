@@ -935,7 +935,7 @@ export default function MeetingPage() {
         });
         const data = await response.json();
         setToken(data.token);
-        setUrl(data.url || import.meta.env.VITE_LIVEKIT_URL || "ws://177.136.252.12:7880");
+        setUrl(data.url || import.meta.env.VITE_LIVEKIT_URL || "/livekit");
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -980,7 +980,7 @@ export default function MeetingPage() {
   return (
     <div className="overflow-hidden" style={{ height: "calc(100vh - 115px)" }}>
       <LiveKitRoom
-        serverUrl={url}
+        serverUrl={`${window.location.origin}/livekit`}
         token={token}
         connect={true}
         audio={true}
@@ -992,7 +992,7 @@ export default function MeetingPage() {
       >
         <MeetingContent
           showChat={false}
-          serverUrl={url}
+          serverUrl={`${window.location.origin}/livekit`}
           token={token}
           roomName={roomName!}
           userEmail={user?.email || ""}
