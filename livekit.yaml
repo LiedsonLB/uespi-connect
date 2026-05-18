@@ -31,7 +31,9 @@ logging:
 
 cors:
   allowed_origins:
+    - "https://neomeet.amsolution.net.br" 
     - "http://neomeet.amsolution.net.br"
+    - "https://177.136.252.12"
     - "http://177.136.252.12"
     - "http://localhost:*"
   allowed_methods:
