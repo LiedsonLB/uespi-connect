@@ -35,7 +35,7 @@ const LoginPage = () => {
     if (email.endsWith("@aluno.uespi.br")) role = "aluno";
     if (email.endsWith("@uespi.br")) role = "professor";
     if (email.endsWith("@prp.uespi.br")) role = "professor";
-    if (email.endsWith("@gmail.com")) role = "admin";
+    if (email.endsWith("liedson.b9@gmail.com")) role = "admin";
 
     const initials = name
       .split(" ")
