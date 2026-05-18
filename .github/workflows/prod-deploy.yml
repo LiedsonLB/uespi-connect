@@ -2,7 +2,7 @@ name: Deploy UESPI Connect
 
 on:
   push:
-    branches: [ main ]
+    branches: [ rollback-db52813 ]
 
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
