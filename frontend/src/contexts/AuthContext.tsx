@@ -54,7 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Verificar sessão ao carregar a página
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -68,14 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const sessionUser = await response.json();
           console.log("✅ Sessão ativa encontrada:", sessionUser);
           
-          // Verificar se tem dados no localStorage
           const storedUser = localStorage.getItem("user");
           
           if (storedUser) {
             const userData = JSON.parse(storedUser);
             setUser(userData);
           } else {
-            // Criar objeto de usuário a partir da sessão
             const userData: UserData = {
               name: sessionUser.username,
               email: sessionUser.username,

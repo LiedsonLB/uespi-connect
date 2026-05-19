@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Mic, MicOff, Camera, CameraOff, Monitor, MonitorOff,
-  MessageSquare, PhoneOff, Users, RefreshCw, Wifi, WifiOff,
+  MessageSquare, PhoneOff, Users, Wifi, WifiOff,
   MoreVertical, Hand, Smile, X, ChevronRight,
 } from "lucide-react";
 
@@ -41,6 +41,12 @@ interface Reaction {
   x: number;
 }
 
+interface ChatMessage {
+  user: string;
+  text: string;
+  isLocal: boolean;
+}
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const EMOJI_LIST = ["👍","❤️","😂","😮","👏","🎉","🔥","💯","🙌","😍","🤔","👎"];
@@ -70,6 +76,7 @@ function Avatar({
     "#673ab7","#e91e63","#00bcd4","#ff5722",
   ];
   const color = colors[name.charCodeAt(0) % colors.length];
+  const [imgError, setImgError] = useState(false);
 
   return (
     <div
@@ -78,13 +85,13 @@ function Avatar({
         isSpeaking ? "ring-4 ring-green-400 ring-offset-2 ring-offset-black" : ""
       }`}
     >
-      {picture ? (
-        console.log("Avatar picture:", picture),
+      {picture && !imgError ? (
         <img
           src={picture}
           alt={name}
           className="w-full h-full rounded-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          referrerPolicy="no-referrer"
+          onError={() => setImgError(true)}
         />
       ) : (
         <div
@@ -260,16 +267,29 @@ function ParticipantTile({
 
 function ScreenShareTile({ participant }: { participant: Participant }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  // FIX 1: audio element for screen share audio track
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     const isLocal = participant instanceof LocalParticipant;
+
     const attach = () => {
-      const screenPub = [...participant.trackPublications.values()].find(pub =>
+      // Attach screen share video
+      const screenVideoPub = [...participant.trackPublications.values()].find(pub =>
         pub.source === Track.Source.ScreenShare && pub.track &&
         (isLocal ? true : pub.isSubscribed)
       );
-      if (screenPub?.track && videoRef.current) {
-        screenPub.track.attach(videoRef.current);
+      if (screenVideoPub?.track && videoRef.current) {
+        screenVideoPub.track.attach(videoRef.current);
+      }
+
+      // FIX 1: Attach screen share audio (ScreenShareAudio track)
+      const screenAudioPub = [...participant.trackPublications.values()].find(pub =>
+        pub.source === Track.Source.ScreenShareAudio && pub.track &&
+        (isLocal ? false : pub.isSubscribed) // don't attach local audio to avoid echo
+      );
+      if (screenAudioPub?.track && audioRef.current && !isLocal) {
+        screenAudioPub.track.attach(audioRef.current);
       }
     };
 
@@ -281,14 +301,19 @@ function ScreenShareTile({ participant }: { participant: Participant }) {
       participant.off(RoomEvent.LocalTrackPublished, attach);
       participant.off(RoomEvent.TrackSubscribed, attach);
       [...participant.trackPublications.values()]
-        .find(p => p.source === Track.Source.ScreenShare)
-        ?.track?.detach();
+        .filter(p =>
+          p.source === Track.Source.ScreenShare ||
+          p.source === Track.Source.ScreenShareAudio
+        )
+        .forEach(p => p.track?.detach());
     };
   }, [participant]);
 
   return (
     <div className="relative w-full h-full rounded-2xl overflow-hidden ring-1 ring-white/10">
       <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-contain" />
+      {/* FIX 1: audio element for screen share audio */}
+      <audio ref={audioRef} autoPlay />
       <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
         📺 {participant.name || participant.identity} está compartilhando
       </div>
@@ -326,7 +351,7 @@ function FloatingReaction({ reaction, onDone }: { reaction: Reaction; onDone: ()
 
   return (
     <div
-      className="pointer-events-none fixed z-50 text-4xl animate-bounce"
+      className="pointer-events-none fixed z-50 text-4xl"
       style={{
         left: reaction.x + "%",
         bottom: "120px",
@@ -389,33 +414,26 @@ function EmojiPicker({
 
 // ─── Chat Panel ───────────────────────────────────────────────────────────────
 
-function ChatPanel({ room, onClose }: { room: Room; onClose: () => void }) {
-  const [messages, setMessages] = useState<any[]>([]);
+// FIX 3: receives messages and onSend from parent so state survives unmount
+function ChatPanel({
+  room,
+  messages,
+  onSend,
+  onClose,
+}: {
+  room: Room;
+  messages: ChatMessage[];
+  onSend: (text: string) => void;
+  onClose: () => void;
+}) {
   const [input, setInput] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
   const send = useCallback(() => {
     if (!input.trim()) return;
-    const payload = new TextEncoder().encode(JSON.stringify({
-      type: "chat", text: input,
-      user: room.localParticipant.name || room.localParticipant.identity,
-      timestamp: new Date().toISOString(),
-    }));
-    room.localParticipant.publishData(payload, { reliable: true });
-    setMessages(p => [...p, { user: "Você", text: input, isLocal: true }]);
+    onSend(input.trim());
     setInput("");
-  }, [input, room]);
-
-  useEffect(() => {
-    const handler = (data: Uint8Array, p?: RemoteParticipant) => {
-      const msg = JSON.parse(new TextDecoder().decode(data));
-      if (msg.type === "chat") {
-        setMessages(prev => [...prev, { user: p?.name || p?.identity || msg.user, text: msg.text, isLocal: false }]);
-      }
-    };
-    room.on(RoomEvent.DataReceived, handler);
-    return () => { room.off(RoomEvent.DataReceived, handler); };
-  }, [room]);
+  }, [input, onSend]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -472,9 +490,9 @@ function ControlsBar({
   showChat,
   onToggleParticipants,
   showParticipants,
-  serverUrl,
-  token,
   participantCount,
+  reactions,
+  onReaction,
 }: {
   room: Room;
   onLeave: () => void;
@@ -482,16 +500,16 @@ function ControlsBar({
   showChat: boolean;
   onToggleParticipants: () => void;
   showParticipants: boolean;
-  serverUrl: string;
-  token: string;
   participantCount: number;
+  // FIX 2: reactions and handler lifted to parent (MeetingContent)
+  reactions: Reaction[];
+  onReaction: (emoji: string) => void;
 }) {
   const [mic, setMic] = useState(false);
   const [cam, setCam] = useState(true);
   const [screen, setScreen] = useState(false);
   const [hand, setHand] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
-  const [reactions, setReactions] = useState<Reaction[]>([]);
   const [connected, setConnected] = useState(false);
   const [time, setTime] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -503,7 +521,6 @@ function ControlsBar({
     return () => { room.off(RoomEvent.ConnectionStateChanged, check); };
   }, [room]);
 
-  // Meeting timer
   useEffect(() => {
     timerRef.current = setInterval(() => setTime(t => t + 1), 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
@@ -540,16 +557,6 @@ function ControlsBar({
     if (!hand) toast("✋ Você levantou a mão", { duration: 2000 });
   };
 
-  const sendReaction = (emoji: string) => {
-    const id = Math.random().toString(36).slice(2);
-    const x = 20 + Math.random() * 60;
-    setReactions(r => [...r, { id, emoji, user: "Você", x }]);
-
-    // broadcast via data channel
-    const payload = new TextEncoder().encode(JSON.stringify({ type: "reaction", emoji }));
-    room.localParticipant.publishData(payload, { reliable: false });
-  };
-
   const ControlBtn = ({
     active, danger, onClick, icon, label, badge,
   }: {
@@ -580,19 +587,24 @@ function ControlsBar({
 
   return (
     <>
-      {/* Floating reactions */}
       <style>{`
         @keyframes floatUp {
           0%   { transform: translateY(0) scale(1); opacity: 1; }
           100% { transform: translateY(-200px) scale(1.5); opacity: 0; }
         }
       `}</style>
+
+      {/* FIX 2: reactions rendered here, sourced from parent */}
       {reactions.map(r => (
-        <FloatingReaction key={r.id} reaction={r} onDone={() => setReactions(prev => prev.filter(x => x.id !== r.id))} />
+        <FloatingReaction
+          key={r.id}
+          reaction={r}
+          onDone={() => {}} // cleanup handled in parent
+        />
       ))}
 
       {showEmoji && (
-        <EmojiPicker onSelect={sendReaction} onClose={() => setShowEmoji(false)} />
+        <EmojiPicker onSelect={onReaction} onClose={() => setShowEmoji(false)} />
       )}
 
       <div className="relative flex items-center justify-between px-6 py-3 rounded-2xl bg-[#111827] backdrop-blur-md border-t border-white/5">
@@ -743,12 +755,20 @@ function MeetingContent({
   const [screenSharer, setScreenSharer] = useState<Participant | null>(null);
   const hasCalledLeave = useRef(false);
 
-  // Profile pictures map: identity -> url
-  // Local user from currentUser, remote users from participant.metadata (JSON)
+  // FIX 3: chat messages lifted to this level so they survive ChatPanel unmount
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
+  // FIX 2: reactions state lifted here so ControlsBar and DataReceived share the same source
+  const [reactions, setReactions] = useState<Reaction[]>([]);
+
+  // FIX 4: build profile pictures map consistently using participant.identity
+  // The identity IS the email (set during join), so we key by identity throughout.
   const profilePictures: Record<string, string> = {};
+  // Local user: key by their email (= their identity in LiveKit)
   if (currentUser?.profilePicture && currentUser?.email) {
     profilePictures[currentUser.email] = currentUser.profilePicture;
   }
+  // Remote users: read from participant.metadata JSON
   participants.forEach(p => {
     if (p.metadata) {
       try {
@@ -757,6 +777,65 @@ function MeetingContent({
       } catch {}
     }
   });
+
+  // FIX 2 + 3: single DataReceived handler in MeetingContent for both chat and reactions
+  useEffect(() => {
+    const handler = (data: Uint8Array, p?: RemoteParticipant) => {
+      try {
+        const msg = JSON.parse(new TextDecoder().decode(data));
+
+        if (msg.type === "chat") {
+          const senderName = p?.name || p?.identity || msg.user || "Desconhecido";
+          // FIX 3: append to persistent chat state
+          setChatMessages(prev => [...prev, { user: senderName, text: msg.text, isLocal: false }]);
+          // FIX 3: show toast when chat panel is closed
+          if (!showChat) {
+            toast(`💬 ${senderName}: ${msg.text}`, { duration: 4000 });
+          }
+        }
+
+        // FIX 2: handle incoming reactions from remote participants
+        if (msg.type === "reaction") {
+          const id = Math.random().toString(36).slice(2);
+          const x = 20 + Math.random() * 60;
+          const senderName = p?.name || p?.identity || "Alguém";
+          setReactions(r => [...r, { id, emoji: msg.emoji, user: senderName, x }]);
+          setTimeout(() => {
+            setReactions(prev => prev.filter(r => r.id !== id));
+          }, 3000);
+        }
+      } catch {}
+    };
+
+    room.on(RoomEvent.DataReceived, handler);
+    return () => { room.off(RoomEvent.DataReceived, handler); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room, showChat]);
+
+  // FIX 3: send chat message from here and publish via LiveKit
+  const handleSendChat = useCallback((text: string) => {
+    const payload = new TextEncoder().encode(JSON.stringify({
+      type: "chat",
+      text,
+      user: room.localParticipant.name || room.localParticipant.identity,
+      timestamp: new Date().toISOString(),
+    }));
+    room.localParticipant.publishData(payload, { reliable: true });
+    setChatMessages(prev => [...prev, { user: "Você", text, isLocal: true }]);
+  }, [room]);
+
+  // FIX 2: send reaction from here and publish via LiveKit
+  const handleReaction = useCallback((emoji: string) => {
+    const id = Math.random().toString(36).slice(2);
+    const x = 20 + Math.random() * 60;
+    setReactions(r => [...r, { id, emoji, user: "Você", x }]);
+    setTimeout(() => {
+      setReactions(prev => prev.filter(r => r.id !== id));
+    }, 3000);
+
+    const payload = new TextEncoder().encode(JSON.stringify({ type: "reaction", emoji }));
+    room.localParticipant.publishData(payload, { reliable: false });
+  }, [room]);
 
   // Detect screen share
   useEffect(() => {
@@ -817,7 +896,6 @@ function MeetingContent({
         {/* Video area */}
         <div className="flex-1 flex flex-col min-w-0 gap-2">
           {screenSharer ? (
-            // Screen share layout: big screen + sidebar participants
             <div className="flex-1 flex gap-2 min-h-0">
               <div className="flex-1 min-w-0">
                 <ScreenShareTile participant={screenSharer} />
@@ -834,7 +912,6 @@ function MeetingContent({
               </div>
             </div>
           ) : (
-            // Grid layout
             <div
               className="flex-1 grid gap-2 min-h-0"
               style={{
@@ -865,7 +942,13 @@ function MeetingContent({
         {sideOpen && (
           <div className="w-80 flex-shrink-0">
             {showChat && (
-              <ChatPanel room={room} onClose={() => setShowChat(false)} />
+              // FIX 3: pass persistent messages and send handler from parent
+              <ChatPanel
+                room={room}
+                messages={chatMessages}
+                onSend={handleSendChat}
+                onClose={() => setShowChat(false)}
+              />
             )}
             {showParticipants && !showChat && (
               <ParticipantsPanel
@@ -886,9 +969,10 @@ function MeetingContent({
         showChat={showChat}
         onToggleParticipants={() => { setShowParticipants(v => !v); setShowChat(false); }}
         showParticipants={showParticipants}
-        serverUrl={serverUrl}
-        token={token}
         participantCount={participants.length}
+        // FIX 2: pass reactions and handler
+        reactions={reactions}
+        onReaction={handleReaction}
       />
     </div>
   );
@@ -916,7 +1000,7 @@ export default function MeetingPage() {
         if (err.name === "NotAllowedError") {
           toast.error("Permissão negada. Permita câmera e microfone.");
         } else {
-          setShouldConnect(true); // continue anyway
+          setShouldConnect(true);
         }
       }
     };

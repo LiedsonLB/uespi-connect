@@ -32,6 +32,8 @@ services:
     build: ./frontend
     container_name: uespi-frontend
     restart: unless-stopped
+    environment:
+      VITE_GOOGLE_CLIENT_ID: 356082850571-rhdr5ji6dclahh910i04mr86cccoi012.apps.googleusercontent.com
     ports:
       - "80:80"
     depends_on:
