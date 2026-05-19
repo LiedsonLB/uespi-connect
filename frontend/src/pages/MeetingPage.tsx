@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   Mic, MicOff, Camera, CameraOff, Monitor, MonitorOff,
   MessageSquare, PhoneOff, Users, Wifi, WifiOff,
-  MoreVertical, Hand, Smile, X, ChevronRight,
+  MoreVertical, Hand, Smile, X, ChevronRight, FlipHorizontal,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,11 @@ import {
   Room, Track, Participant, RoomEvent, RemoteParticipant,
   ConnectionState, LocalParticipant,
 } from "livekit-client";
+
+// ─── Sound assets ─────────────────────────────────────────────────────────────
+// Ajuste os caminhos conforme sua estrutura de assets
+import messageSoundUrl from "@/assets/message_sound.mp3";
+import handSoundUrl from "@/assets/hand_notification.mp3";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -50,33 +55,61 @@ interface ChatMessage {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const EMOJI_LIST = [
-  "👍","❤️","😂","😮","👏","🎉",
-  "🔥","💯","🙌","😍","🥰","🤩",
-  "😎","🫶","✨","💪","🎊","🥳",
-  "😭","🤯","👀","💀","🫠","🫡",
+  "👍", "❤️", "😂", "😮", "👏", "🎉",
+  "🔥", "💯", "🙌", "😍", "🥰", "🤩",
+  "😎", "🫶", "✨", "💪", "🎊", "🥳",
+  "😭", "🤯", "👀", "💀", "🫠", "🫡",
 ];
 
 const GIF_REACTIONS = [
-  { label: "🥳 Festa",    url: "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif" },
-  { label: "😂 Risada",   url: "https://media.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif" },
-  { label: "👏 Palmas",   url: "https://media.giphy.com/media/7rj2ZgttvgomY/giphy.gif" },
-  { label: "🔥 Fogo",     url: "https://media.giphy.com/media/l46Cy1rHbQ92uuLXa/giphy.gif" },
-  { label: "💃 Dança",    url: "https://media.giphy.com/media/3oz8xPxTUeebQ8pL1e/giphy.gif" },
-  { label: "🤯 Incrível", url: "https://media.giphy.com/media/xT0xeJpnrWC4XWblEk/giphy.gif" },
+  { label: "Festa", url: "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif" },
+  { label: "Pensamento", url: "https://media0.giphy.com/media/v1.Y2lkPTZjMDliOTUyYTJ6YmE1cDRpYmgxZnd2ZDN5dWp5amQzYjU4cGNoc2lhZzBtNGtxdSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kNpNw0eB1w4qDYA7hS/giphy_s.gif" },
+  { label: "Divino", url: "https://media.giphy.com/media/7rj2ZgttvgomY/giphy.gif" },
+  { label: "Assustado", url: "https://www.papodebar.com/wp-content/uploads/2011/05/gato-assustado.gif" },
+  { label: "Palmas", url: "https://media.giphy.com/media/3oz8xPxTUeebQ8pL1e/giphy.gif" },
+  { label: "Incrível", url: "https://media.giphy.com/media/xT0xeJpnrWC4XWblEk/giphy.gif" },
 ];
 
-// FIX 4: detect mobile — screen share not supported on mobile browsers
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 const isMobileDevice = () =>
   /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
   !("getDisplayMedia" in (navigator.mediaDevices || {}));
 
-// FIX 1: normalise Google profile picture URL
 function resolveProfilePicture(url?: string): string | undefined {
   if (!url) return undefined;
   if (url.includes("googleusercontent.com") || url.includes("ggpht.com")) {
     return url.replace(/=s\d+-c/, "=s200-c");
   }
   return url;
+}
+
+// ─── Sound Hook ───────────────────────────────────────────────────────────────
+
+function useNotificationSound(src: string) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isPlayingRef = useRef(false);
+
+  useEffect(() => {
+    audioRef.current = new Audio(src);
+    audioRef.current.volume = 0.4;
+    audioRef.current.loop = false;
+    audioRef.current.onended = () => { isPlayingRef.current = false; };
+    return () => {
+      audioRef.current?.pause();
+      audioRef.current = null;
+    };
+  }, [src]);
+
+  const play = useCallback(() => {
+    if (audioRef.current && !isPlayingRef.current) {
+      isPlayingRef.current = true;
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => { isPlayingRef.current = false; });
+    }
+  }, []);
+
+  return play;
 }
 
 // ─── Avatar ──────────────────────────────────────────────────────────────────
@@ -96,8 +129,8 @@ function Avatar({
 }) {
   const initials = name?.slice(0, 2).toUpperCase() || "??";
   const colors = [
-    "#1a73e8","#0f9d58","#f4b400","#db4437",
-    "#673ab7","#e91e63","#00bcd4","#ff5722",
+    "#1a73e8", "#0f9d58", "#f4b400", "#db4437",
+    "#673ab7", "#e91e63", "#00bcd4", "#ff5722",
   ];
   const color = colors[name.charCodeAt(0) % colors.length];
   const [imgError, setImgError] = useState(false);
@@ -106,9 +139,8 @@ function Avatar({
   return (
     <div
       style={{ width: size, height: size }}
-      className={`relative rounded-full flex-shrink-0 transition-all duration-200 ${
-        isSpeaking ? "ring-4 ring-green-400 ring-offset-2 ring-offset-black" : ""
-      }`}
+      className={`relative rounded-full flex-shrink-0 transition-all duration-200 ${isSpeaking ? "ring-4 ring-green-400 ring-offset-2 ring-offset-black" : ""
+        }`}
     >
       {resolvedPicture && !imgError ? (
         <img
@@ -233,9 +265,8 @@ function ParticipantTile({
   if (compact) {
     return (
       <div
-        className={`relative rounded-xl overflow-hidden bg-[#111827] flex-shrink-0 transition-all duration-200 ${
-          isSpeaking ? "ring-2 ring-green-400" : "ring-1 ring-white/10"
-        }`}
+        className={`relative rounded-xl overflow-hidden bg-[#111827] flex-shrink-0 transition-all duration-200 ${isSpeaking ? "ring-2 ring-green-400" : "ring-1 ring-white/10"
+          }`}
         style={{ width: 160, height: 90 }}
       >
         <video ref={videoRef} autoPlay playsInline muted={isLocal}
@@ -259,9 +290,8 @@ function ParticipantTile({
   }
 
   return (
-    <div className={`relative rounded-2xl overflow-hidden bg-[#1c1f23] transition-all duration-200 ${
-      isSpeaking ? "ring-2 ring-green-400 shadow-lg shadow-green-400/20" : "ring-1 ring-white/10"
-    }`}>
+    <div className={`relative rounded-2xl overflow-hidden bg-[#1c1f23] transition-all duration-200 ${isSpeaking ? "ring-2 ring-green-400 shadow-lg shadow-green-400/20" : "ring-1 ring-white/10"
+      }`}>
       <video ref={videoRef} autoPlay playsInline muted={isLocal}
         className="w-full h-full object-cover" style={{ display: hasVideo ? "block" : "none" }} />
       <audio ref={audioRef} autoPlay />
@@ -379,7 +409,7 @@ function FloatingReaction({ reaction, onDone }: { reaction: Reaction; onDone: ()
 
 function EmojiPicker({ onSelect, onClose }: { onSelect: (e: string) => void; onClose: () => void }) {
   return (
-    <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 bg-[#1c1f23] border border-white/10 rounded-2xl shadow-2xl p-3 w-80">
+    <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 bg-[#1c1f23] border border-white/10 rounded-2xl shadow-2xl p-3 w-72 sm:w-80 max-h-[70vh] overflow-y-auto">
       <div className="flex items-center justify-between mb-2">
         <span className="text-white text-sm font-medium">Reações</span>
         <button onClick={onClose} className="text-white/50 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
@@ -436,9 +466,8 @@ function ChatPanel({ room, messages, onSend, onClose }: {
         {messages.map((m, i) => (
           <div key={i} className={`flex flex-col ${m.isLocal ? "items-end" : "items-start"}`}>
             <span className="text-white/40 text-[10px] mb-0.5">{m.user}</span>
-            <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm ${
-              m.isLocal ? "bg-blue-600 text-white rounded-tr-sm" : "bg-white/10 text-white rounded-tl-sm"
-            }`}>{m.text}</div>
+            <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm ${m.isLocal ? "bg-blue-600 text-white rounded-tr-sm" : "bg-white/10 text-white rounded-tl-sm"
+              }`}>{m.text}</div>
           </div>
         ))}
         <div ref={endRef} />
@@ -461,12 +490,13 @@ function ChatPanel({ room, messages, onSend, onClose }: {
 
 function ControlsBar({
   room, onLeave, onToggleChat, showChat, onToggleParticipants, showParticipants,
-  participantCount, reactions, onReaction, raisedHands, localHandRaised, onToggleHand,
+  participantCount, reactions, onReaction, raisedHands, localHandRaised, onToggleHand, isMobile,
 }: {
   room: Room; onLeave: () => void; onToggleChat: () => void; showChat: boolean;
   onToggleParticipants: () => void; showParticipants: boolean; participantCount: number;
   reactions: Reaction[]; onReaction: (e: string) => void;
   raisedHands: Set<string>; localHandRaised: boolean; onToggleHand: () => void;
+  isMobile: boolean;
 }) {
   const [mic, setMic] = useState(false);
   const [cam, setCam] = useState(false);
@@ -474,7 +504,7 @@ function ControlsBar({
   const [showEmoji, setShowEmoji] = useState(false);
   const [connected, setConnected] = useState(false);
   const [time, setTime] = useState(0);
-  const mobile = isMobileDevice();
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
 
   useEffect(() => {
     const check = () => setConnected(room.state === ConnectionState.Connected);
@@ -490,8 +520,8 @@ function ControlsBar({
   const formatTime = (s: number) => {
     const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
     return h > 0
-      ? `${h}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`
-      : `${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+      ? `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+      : `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
   };
 
   const toggleMic = async () => {
@@ -502,48 +532,59 @@ function ControlsBar({
 
   const toggleCam = async () => {
     if (!connected) return;
-    await room.localParticipant.setCameraEnabled(!cam);
+    await room.localParticipant.setCameraEnabled(!cam, { facingMode });
     setCam(!cam);
+  };
+
+  const flipCamera = async () => {
+    if (!connected || !cam) return;
+    const newFacing = facingMode === "user" ? "environment" : "user";
+    setFacingMode(newFacing);
+    await room.localParticipant.setCameraEnabled(false);
+    await room.localParticipant.setCameraEnabled(true, { facingMode: newFacing });
   };
 
   const toggleScreen = async () => {
     if (!connected) return;
-    if (mobile) {
-      toast.warning("📱 Compartilhamento de tela não é suportado em dispositivos móveis", { duration: 3000 });
-      return;
-    }
     try {
       await room.localParticipant.setScreenShareEnabled(!screen);
       setScreen(!screen);
     } catch (err: any) {
-      const msg = err.name === "NotAllowedError"
-        ? "Permissão para compartilhar tela negada"
-        : "Não foi possível compartilhar a tela";
-      toast.error(msg);
+      toast.error(err.name === "NotAllowedError" ? "Permissão negada" : "Não foi possível compartilhar");
     }
   };
 
-  const Btn = ({ active, danger, highlight, disabled, onClick, icon, label, badge }: {
-    active?: boolean; danger?: boolean; highlight?: boolean; disabled?: boolean;
-    onClick: () => void; icon: React.ReactNode; label: string; badge?: number;
+  // ── Botão circular reutilizável ───────────────────────────────────────────
+  const Btn = ({
+    onClick, icon, label, badge, active, danger, highlight, disabled, showLabel = true,
+  }: {
+    onClick: () => void; icon: React.ReactNode; label: string;
+    badge?: number; active?: boolean; danger?: boolean; highlight?: boolean;
+    disabled?: boolean; showLabel?: boolean;
   }) => (
     <div className="flex flex-col items-center gap-1">
-      <button onClick={onClick} disabled={disabled}
-        className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-150 ${
-          disabled ? "opacity-30 cursor-not-allowed bg-white/5 text-white/40"
-          : danger ? "bg-red-600 hover:bg-red-500 text-white"
-          : highlight ? "bg-yellow-400 hover:bg-yellow-300 text-black"
-          : active === false ? "bg-red-600/90 hover:bg-red-500 text-white"
-          : "bg-white/10 hover:bg-white/20 text-white"
-        }`}>
+      <button
+        onClick={disabled ? undefined : onClick}
+        className={`
+          relative flex items-center justify-center rounded-full transition-all duration-150 active:scale-95
+          ${isMobile ? "w-11 h-11" : "w-12 h-12"}
+          ${disabled ? "opacity-30 cursor-not-allowed bg-white/5 text-white/30" :
+            danger ? "bg-red-600 hover:bg-red-500 text-white" :
+              highlight ? "bg-yellow-400 hover:bg-yellow-300 text-black" :
+                active === false ? "bg-red-600/90 hover:bg-red-500 text-white" :
+                  "bg-white/10 hover:bg-white/20 text-white"}
+        `}
+      >
         {icon}
         {!!badge && badge > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full text-[10px] flex items-center justify-center text-white font-bold">
-            {badge}
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold">
+            {badge > 9 ? "9+" : badge}
           </span>
         )}
       </button>
-      <span className="text-white/50 text-[10px] select-none">{label}</span>
+      {showLabel && !isMobile && (
+        <span className="text-white/40 text-[10px] select-none leading-none">{label}</span>
+      )}
     </div>
   );
 
@@ -552,61 +593,133 @@ function ControlsBar({
       <style>{`
         @keyframes floatUp {
           0%   { transform: translateY(0) scale(1); opacity: 1; }
-          100% { transform: translateY(-220px) scale(1.1); opacity: 0; }
+          100% { transform: translateY(-200px) scale(1.1); opacity: 0; }
         }
       `}</style>
 
-      {reactions.map(r => <FloatingReaction key={r.id} reaction={r} onDone={() => {}} />)}
-
+      {reactions.map(r => <FloatingReaction key={r.id} reaction={r} onDone={() => { }} />)}
       {showEmoji && <EmojiPicker onSelect={onReaction} onClose={() => setShowEmoji(false)} />}
 
-      <div className="relative flex items-center justify-between px-6 py-3 rounded-2xl bg-[#111827] backdrop-blur-md border-t border-white/5">
-        <div className="flex items-center gap-3 w-48">
-          <div className="flex items-center gap-1.5">
-            {connected ? <Wifi className="w-3.5 h-3.5 text-green-400" /> : <WifiOff className="w-3.5 h-3.5 text-red-400" />}
-            <span className="text-white/40 text-xs font-mono">{formatTime(time)}</span>
-          </div>
-          <div className="flex items-center gap-1 text-white/40 text-xs">
-            <Users className="w-3 h-3" /><span>{participantCount}</span>
-          </div>
-          {raisedHands.size > 0 && (
-            <div className="flex items-center gap-1 text-yellow-400 text-xs font-semibold animate-pulse">
-              <span>✋</span><span>{raisedHands.size}</span>
+      {/* ════════════ MOBILE controls ════════════════════════════════════════ */}
+      {isMobile ? (
+        <div className="bg-[#0d1117] border-t border-white/5 flex-shrink-0">
+          {/* ── Barra de info ─────────────────────────────────────────────── */}
+          <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.06]">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                {connected
+                  ? <Wifi className="w-3 h-3 text-green-400" />
+                  : <WifiOff className="w-3 h-3 text-red-400" />}
+                <span className="text-white/50 text-xs font-mono tabular-nums">{formatTime(time)}</span>
+              </div>
+              <div className="flex items-center gap-1 text-white/40 text-xs">
+                <Users className="w-3 h-3" /><span>{participantCount}</span>
+              </div>
+              {raisedHands.size > 0 && (
+                <div className="flex items-center gap-1 text-yellow-400 text-xs font-semibold animate-pulse">
+                  <span>✋</span><span>{raisedHands.size}</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+            {/* Chat + participantes como pill buttons */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={onToggleParticipants}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${showParticipants ? "bg-white/20 text-white" : "bg-white/8 text-white/50 hover:bg-white/12"
+                  }`}
+              >
+                <Users className="w-3 h-3" /><span>{participantCount}</span>
+              </button>
+              <button
+                onClick={onToggleChat}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${showChat ? "bg-blue-600 text-white" : "bg-white/8 text-white/50 hover:bg-white/12"
+                  }`}
+              >
+                <MessageSquare className="w-3 h-3" /><span>Chat</span>
+              </button>
+            </div>
+          </div>
 
-        <div className="flex items-end gap-3">
-          <Btn active={mic} onClick={toggleMic}
-            icon={mic ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-            label={mic ? "Silenciar" : "Ativar mic"} />
-          <Btn active={cam} onClick={toggleCam}
-            icon={cam ? <Camera className="w-5 h-5" /> : <CameraOff className="w-5 h-5" />}
-            label={cam ? "Desligar cam" : "Ligar cam"} />
-          <Btn onClick={toggleScreen} disabled={mobile}
-            icon={screen ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
-            label={mobile ? "Indisponível" : screen ? "Parar" : "Apresentar"} />
-          <Btn onClick={() => setShowEmoji(v => !v)}
-            icon={<Smile className="w-5 h-5" />} label="Reações" />
-          <Btn onClick={onToggleHand} highlight={localHandRaised}
-            icon={<Hand className="w-5 h-5" />}
-            label={localHandRaised ? "Baixar mão" : "Levantar mão"} />
-          <div className="flex flex-col items-center gap-1 ml-2">
-            <button onClick={onLeave}
-              className="w-14 h-12 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-all duration-150">
+          {/* ── Botões de controle ────────────────────────────────────────── */}
+          <div className="flex items-center justify-around px-2 py-3">
+            <Btn onClick={toggleMic} active={mic}
+              icon={mic ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+              label="Mic" />
+            <Btn onClick={toggleCam} active={cam}
+              icon={cam ? <Camera className="w-5 h-5" /> : <CameraOff className="w-5 h-5" />}
+              label="Câm" />
+            {cam && (
+              <Btn onClick={flipCamera}
+                icon={<FlipHorizontal className="w-5 h-5" />}
+                label="Virar" />
+            )}
+            <Btn onClick={() => setShowEmoji(v => !v)}
+              icon={<Smile className="w-5 h-5" />} label="React" />
+            <Btn onClick={onToggleHand} highlight={localHandRaised}
+              icon={<Hand className="w-5 h-5" />}
+              label={localHandRaised ? "Baixar" : "Mão"} />
+            {/* Sair — vermelho maior */}
+            <button
+              onClick={onLeave}
+              className="w-11 h-11 rounded-full bg-red-600 hover:bg-red-500 active:scale-95 text-white flex items-center justify-center transition-all shadow-lg shadow-red-900/40"
+            >
               <PhoneOff className="w-5 h-5" />
             </button>
-            <span className="text-white/50 text-[10px]">Sair</span>
           </div>
         </div>
+      ) : (
+        /* ════════════ DESKTOP controls ══════════════════════════════════════ */
+        <div className="flex items-center justify-between px-6 py-3 bg-[#111827] border-t border-white/5 flex-shrink-0">
+          {/* Info */}
+          <div className="flex items-center gap-4 w-56">
+            <div className="flex items-center gap-1.5">
+              {connected ? <Wifi className="w-3.5 h-3.5 text-green-400" /> : <WifiOff className="w-3.5 h-3.5 text-red-400" />}
+              <span className="text-white/40 text-xs font-mono tabular-nums">{formatTime(time)}</span>
+            </div>
+            <div className="flex items-center gap-1 text-white/40 text-xs">
+              <Users className="w-3 h-3" /><span>{participantCount}</span>
+            </div>
+            {raisedHands.size > 0 && (
+              <div className="flex items-center gap-1 text-yellow-400 text-xs font-semibold animate-pulse">
+                <span>✋</span><span>{raisedHands.size}</span>
+              </div>
+            )}
+          </div>
 
-        <div className="flex items-end gap-3 w-48 justify-end">
-          <Btn onClick={onToggleParticipants} icon={<Users className="w-5 h-5" />}
-            label="Participantes" badge={participantCount} />
-          <Btn onClick={onToggleChat} icon={<MessageSquare className="w-5 h-5" />} label="Chat" />
-          <Btn onClick={() => {}} icon={<MoreVertical className="w-5 h-5" />} label="Mais" />
+          {/* Botões centrais */}
+          <div className="flex items-end gap-3">
+            <Btn onClick={toggleMic} active={mic}
+              icon={mic ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+              label={mic ? "Silenciar" : "Ativar mic"} />
+            <Btn onClick={toggleCam} active={cam}
+              icon={cam ? <Camera className="w-5 h-5" /> : <CameraOff className="w-5 h-5" />}
+              label={cam ? "Desligar cam" : "Ligar cam"} />
+            <Btn onClick={toggleScreen}
+              icon={screen ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
+              label={screen ? "Parar" : "Apresentar"} />
+            <Btn onClick={() => setShowEmoji(v => !v)}
+              icon={<Smile className="w-5 h-5" />} label="Reações" />
+            <Btn onClick={onToggleHand} highlight={localHandRaised}
+              icon={<Hand className="w-5 h-5" />}
+              label={localHandRaised ? "Baixar mão" : "Levantar mão"} />
+            <div className="flex flex-col items-center gap-1 ml-2">
+              <button onClick={onLeave}
+                className="w-14 h-12 rounded-full bg-red-600 hover:bg-red-500 active:scale-95 text-white flex items-center justify-center transition-all">
+                <PhoneOff className="w-5 h-5" />
+              </button>
+              <span className="text-white/40 text-[10px]">Sair</span>
+            </div>
+          </div>
+
+          {/* Painéis direita */}
+          <div className="flex items-end gap-3 w-56 justify-end">
+            <Btn onClick={onToggleParticipants}
+              icon={<Users className="w-5 h-5" />} label="Participantes" badge={participantCount} />
+            <Btn onClick={onToggleChat}
+              icon={<MessageSquare className="w-5 h-5" />} label="Chat" />
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
@@ -659,109 +772,49 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
   const [raisedHands, setRaisedHands] = useState<Set<string>>(new Set());
   const localHandRaised = raisedHands.has(userEmail);
 
-  // FIX 1: build profile picture map com logs
+  // ─── Sons de notificação ───────────────────────────────────────────────────
+  const playMessageSound = useNotificationSound(messageSoundUrl);
+  const playHandSound = useNotificationSound(handSoundUrl);
+
+  // Build profile pictures map
   const profilePictures: Record<string, string> = {};
   if (currentUser?.profilePicture && currentUser?.email) {
     const r = resolveProfilePicture(currentUser.profilePicture);
     if (r) profilePictures[currentUser.email] = r;
-    console.log("📸 Foto do usuário atual:", { email: currentUser.email, url: r });
   }
-  
   participants.forEach(p => {
-    console.log(`🔍 Processando participante ${p.identity}:`, {
-      name: p.name,
-      metadata: p.metadata,
-      metadataType: typeof p.metadata
-    });
-    
     if (p.metadata) {
       try {
         const meta = JSON.parse(p.metadata);
-        console.log(`✅ Metadata parseada para ${p.identity}:`, meta);
         if (meta.profilePicture) {
           const r = resolveProfilePicture(meta.profilePicture);
           if (r) profilePictures[p.identity] = r;
-          console.log(`🖼️ Foto definida para ${p.identity}:`, r);
-        } else {
-          console.log(`⚠️ Sem profilePicture no metadata de ${p.identity}`);
         }
-      } catch (err) {
-        console.error(`❌ Erro ao parsear metadata de ${p.identity}:`, err);
-      }
-    } else {
-      console.log(`⚠️ ${p.identity} não tem metadata`);
+      } catch { }
     }
   });
 
-  // LOG: lista de participantes
-  useEffect(() => {
-    console.log("📋 LISTA DE PARTICIPANTES:", participants.map(p => ({
-      identity: p.identity,
-      name: p.name,
-      metadata: p.metadata,
-      isLocal: p instanceof LocalParticipant
-    })));
-  }, [participants]);
-
-  // LOG: novos participantes entrando/saindo
-  useEffect(() => {
-    const onParticipantConnected = (participant: RemoteParticipant) => {
-      console.log("🟢 NOVO PARTICIPANTE CONECTADO:", {
-        identity: participant.identity,
-        name: participant.name,
-        metadata: participant.metadata,
-        metadataType: typeof participant.metadata
-      });
-    };
-    
-    const onParticipantDisconnected = (participant: RemoteParticipant) => {
-      console.log("🔴 PARTICIPANTE DESCONECTOU:", {
-        identity: participant.identity,
-        name: participant.name
-      });
-    };
-    
-    room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
-    room.on(RoomEvent.ParticipantDisconnected, onParticipantDisconnected);
-    
-    return () => {
-      room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
-      room.off(RoomEvent.ParticipantDisconnected, onParticipantDisconnected);
-    };
-  }, [room]);
-
-  // FIX 1: publish our own profile picture as metadata as soon as connected
+  // Publish our own metadata
   useEffect(() => {
     if (!room || !currentUser?.profilePicture) return;
-    
     const metadata = JSON.stringify({ profilePicture: currentUser.profilePicture });
-    console.log("📤 Enviando meu metadata:", {
-      profilePicture: currentUser.profilePicture,
-      metadataString: metadata
-    });
-    
-    room.localParticipant
-      .setMetadata(metadata)
-      .then(() => console.log("✅ Metadata enviado com sucesso"))
-      .catch((err) => console.error("❌ Erro ao enviar metadata:", err));
+    room.localParticipant.setMetadata(metadata).catch(console.error);
   }, [room, currentUser?.profilePicture]);
 
-  // LOG: dados recebidos via DataChannel
+  // DataChannel handler
+  const showChatRef = useRef(showChat);
+  showChatRef.current = showChat;
+
   useEffect(() => {
     const handler = (data: Uint8Array, p?: RemoteParticipant) => {
-      console.log("📨 Dados recebidos de:", p?.identity || "sistema", {
-        participantName: p?.name,
-        participantMetadata: p?.metadata,
-        dataSize: data.length
-      });
-      
       try {
         const msg = JSON.parse(new TextDecoder().decode(data));
-        console.log("📄 Mensagem parseada:", msg);
 
         if (msg.type === "chat") {
           const senderName = p?.name || p?.identity || msg.user || "Desconhecido";
           setChatMessages(prev => [...prev, { user: senderName, text: msg.text, isLocal: false }]);
+          // ─── Toca som de mensagem ──────────────────────────────────────────
+          playMessageSound();
           if (!showChatRef.current) toast(`💬 ${senderName}: ${msg.text}`, { duration: 4000 });
         }
 
@@ -780,6 +833,8 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
             const next = new Set(prev);
             if (msg.raised) {
               next.add(identity);
+              // ─── Toca som de mão levantada ───────────────────────────────
+              playHandSound();
               toast(`✋ ${p?.name || p?.identity || "Alguém"} levantou a mão`, { duration: 3000 });
             } else {
               next.delete(identity);
@@ -787,17 +842,11 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
             return next;
           });
         }
-      } catch (err) {
-        console.error("❌ Erro ao parsear dados recebidos:", err);
-      }
+      } catch { }
     };
-    
     room.on(RoomEvent.DataReceived, handler);
     return () => { room.off(RoomEvent.DataReceived, handler); };
-  }, [room]);
-
-  const showChatRef = useRef(showChat);
-  showChatRef.current = showChat;
+  }, [room, playMessageSound, playHandSound]);
 
   const handleSendChat = useCallback((text: string) => {
     const payload = new TextEncoder().encode(JSON.stringify({
@@ -861,7 +910,7 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
   const registerLeave = useCallback(async () => {
     if (hasCalledLeave.current) return;
     hasCalledLeave.current = true;
-    try { await apiFetch(`/meetings/${roomName}/leave`, { method: "POST", body: JSON.stringify({ identity: userEmail }) }); } catch {}
+    try { await apiFetch(`/meetings/${roomName}/leave`, { method: "POST", body: JSON.stringify({ identity: userEmail }) }); } catch { }
   }, [roomName, userEmail]);
 
   useEffect(() => {
@@ -878,14 +927,34 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
   const handleLeave = async () => { await registerLeave(); onLeave(); };
   const sideOpen = showChat || showParticipants;
 
+  // ─── Grid responsivo ────────────────────────────────────────────────────────
+  // Mobile: sempre 1 coluna (um em cima do outro, cada um ocupa altura proporcional)
+  // Desktop: grid adaptativo
+  const getGridStyle = (count: number): React.CSSProperties => {
+    if (mobile) {
+      return {
+        gridTemplateColumns: "1fr",
+        gridAutoRows: `${Math.floor(100 / Math.max(count, 1))}%`,
+      };
+    }
+    const cols = count <= 1 ? 1 : count === 2 ? 2 : count <= 4 ? 2 : count <= 6 ? 3 : 4;
+    return { gridTemplateColumns: `repeat(${cols}, 1fr)`, gridAutoRows: "1fr" };
+  };
+
+  const mobile = isMobileDevice();
+
   return (
-    <div className="flex flex-col h-full select-none">
-      <div className="flex flex-1 min-h-0 gap-2 p-2">
-        <div className="flex-1 flex flex-col min-w-0 gap-2">
+    <div className="flex flex-col h-full select-none bg-[#0d1117]">
+      <div className="flex flex-1 min-h-0">
+        {/* ── Área de vídeos ──────────────────────────────────────────────── */}
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 p-2 gap-2">
           {screenSharer ? (
-            <div className="flex-1 flex gap-2 min-h-0">
-              <div className="flex-1 min-w-0"><ScreenShareTile participant={screenSharer} /></div>
-              <div className="flex flex-col gap-2 w-44 overflow-y-auto">
+            <div className="flex-1 flex flex-col sm:flex-row gap-2 min-h-0">
+              <div className="flex-1 min-h-0 min-w-0">
+                <ScreenShareTile participant={screenSharer} />
+              </div>
+              {/* Thumbnails: scroll horizontal mobile, coluna desktop */}
+              <div className="flex sm:flex-col gap-2 overflow-x-auto sm:overflow-y-auto pb-1 sm:pb-0 flex-shrink-0">
                 {participants.map(p => (
                   <ParticipantTile key={p.identity} participant={p}
                     profilePicture={profilePictures[p.identity]} compact
@@ -894,14 +963,8 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
               </div>
             </div>
           ) : (
-            <div className="flex-1 grid gap-2 min-h-0" style={{
-              gridTemplateColumns: participants.length <= 1 ? "1fr"
-                : participants.length === 2 ? "repeat(2, 1fr)"
-                : participants.length <= 4 ? "repeat(2, 1fr)"
-                : participants.length <= 6 ? "repeat(3, 1fr)"
-                : "repeat(4, 1fr)",
-              gridAutoRows: "1fr",
-            }}>
+            /* Grid: mobile = 1 coluna empilhada | desktop = adaptativo */
+            <div className="flex-1 grid gap-2 min-h-0" style={getGridStyle(participants.length)}>
               {participants.map(p => (
                 <ParticipantTile key={p.identity} participant={p}
                   profilePicture={profilePictures[p.identity]}
@@ -911,17 +974,36 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
           )}
         </div>
 
+        {/* ── Painel lateral: aside no desktop, bottom-sheet no mobile ── */}
         {sideOpen && (
-          <div className="w-80 flex-shrink-0">
-            {showChat && (
-              <ChatPanel room={room} messages={chatMessages} onSend={handleSendChat}
-                onClose={() => setShowChat(false)} />
+          <>
+            {/* Overlay escuro mobile */}
+            {mobile && (
+              <div
+                className="fixed inset-0 z-30 bg-black/60"
+                onClick={() => { setShowChat(false); setShowParticipants(false); }}
+              />
             )}
-            {showParticipants && !showChat && (
-              <ParticipantsPanel participants={participants} onClose={() => setShowParticipants(false)}
-                profilePictures={profilePictures} raisedHands={raisedHands} />
-            )}
-          </div>
+            <div
+              className={`
+                bg-[#111827] flex flex-col overflow-hidden
+                ${mobile
+                  ? "fixed bottom-0 left-0 right-0 z-40 rounded-t-2xl"
+                  : "w-80 flex-shrink-0 border-l border-white/5"
+                }
+              `}
+              style={mobile ? { height: "62vh" } : { height: "100%" }}
+            >
+              {showChat && (
+                <ChatPanel room={room} messages={chatMessages} onSend={handleSendChat}
+                  onClose={() => setShowChat(false)} />
+              )}
+              {showParticipants && !showChat && (
+                <ParticipantsPanel participants={participants} onClose={() => setShowParticipants(false)}
+                  profilePictures={profilePictures} raisedHands={raisedHands} />
+              )}
+            </div>
+          </>
         )}
       </div>
 
@@ -932,6 +1014,7 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
         participantCount={participants.length}
         reactions={reactions} onReaction={handleReaction}
         raisedHands={raisedHands} localHandRaised={localHandRaised} onToggleHand={handleToggleHand}
+        isMobile={mobile}
       />
     </div>
   );
@@ -968,13 +1051,6 @@ export default function MeetingPage() {
       try {
         setIsLoading(true);
         if (!roomName || !user?.email) throw new Error("Dados inválidos");
-        
-        console.log("📦 Dados enviados para gerar token:", {
-          identity: user.email,
-          name: user.name,
-          metadata: { profilePicture: user.profilePicture || "" }
-        });
-        
         const response = await apiFetch(`/meetings/${roomName}/join`, {
           method: "POST",
           body: JSON.stringify({
@@ -984,10 +1060,8 @@ export default function MeetingPage() {
           }),
         });
         const data = await response.json();
-        console.log("🎫 Token recebido:", data.token ? "Token OK (length: " + data.token.length + ")" : "Sem token");
         setToken(data.token);
       } catch (err: any) {
-        console.error("❌ Erro ao obter token:", err);
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -997,10 +1071,10 @@ export default function MeetingPage() {
 
   if (isLoading || !shouldConnect) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-[#0d1117]">
         <div className="text-center">
           <div className="w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground text-sm">
+          <p className="text-white/40 text-sm">
             {!shouldConnect ? "Verificando permissões..." : "Entrando na reunião..."}
           </p>
         </div>
@@ -1009,40 +1083,31 @@ export default function MeetingPage() {
   }
 
   if (error) return (
-    <div className="flex flex-col items-center justify-center h-screen gap-4">
+    <div className="flex flex-col items-center justify-center h-screen bg-[#0d1117] gap-4">
       <p className="text-red-400 text-lg">❌ {error}</p>
       <Button onClick={() => navigate("/meetings")} variant="outline">Voltar para reuniões</Button>
     </div>
   );
 
   if (!token) return (
-    <div className="flex items-center justify-center h-screen">
-      <p className="text-muted-foreground">Aguardando token...</p>
+    <div className="flex items-center justify-center h-screen bg-[#0d1117]">
+      <p className="text-white/40">Aguardando token...</p>
     </div>
   );
 
   return (
-    <div className="overflow-hidden" style={{ height: "calc(100vh - 115px)" }}>
+    // Ocupa a tela toda sem depender do AppLayout
+    <div className="w-screen h-screen overflow-hidden bg-[#0d1117]">
       <LiveKitRoom
         serverUrl={`${window.location.origin}/livekit`} // prod
-        // serverUrl={import.meta.env.VITE_LIVEKIT_URL || "ws://localhost:7880"} // dev
+        // serverUrl={import.meta.env.VITE_LIVEKIT_URL || "ws://localhost:7880"} //dev
         token={token}
         connect={true}
         audio={false}
         video={false}
-        onConnected={() => {
-          console.log("✅ Conectado ao LiveKitRoom");
-          toast.success("Conectado à reunião!");
-        }}
-        onDisconnected={() => { 
-          console.log("❌ Desconectado do LiveKitRoom");
-          toast.warning("Você saiu da reunião"); 
-          navigate("/meetings"); 
-        }}
-        onError={err => {
-          console.error("🔥 Erro no LiveKitRoom:", err);
-          toast.error("Erro: " + err.message);
-        }}
+        onConnected={() => toast.success("Conectado à reunião!")}
+        onDisconnected={() => { toast.warning("Você saiu da reunião"); navigate("/meetings"); }}
+        onError={err => toast.error("Erro: " + err.message)}
         className="h-full"
       >
         <MeetingContent

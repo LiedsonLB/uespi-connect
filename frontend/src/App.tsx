@@ -41,21 +41,31 @@ function ProtectedRoutes() {
   if (!isLoggedIn) return <Navigate to="/login" replace />;
 
   return (
-    <AppLayout>
-      <Routes>
-        <Route path="/" element={<MeetingsListPage />} />
-        <Route path="/classes" element={<ClassesPage />} />
-        <Route path="/meetings" element={<MeetingsListPage />} />
-        <Route path="/meeting/:roomName" element={<MeetingPage />} />
-        <Route path="/events" element={<EventsPage />} />
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/files" element={<FilesPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        {role === "admin" && <Route path="/admin" element={<AdminPage />} />}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AppLayout>
+    <Routes>
+      {/* ─── Meeting page: SEM AppLayout para não sair da reunião ao clicar no sidebar ─── */}
+      <Route path="/meeting/:roomName" element={<MeetingPage />} />
+
+      {/* ─── Todas as outras rotas: COM AppLayout ─── */}
+      <Route
+        path="*"
+        element={
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<MeetingsListPage />} />
+              <Route path="/classes" element={<ClassesPage />} />
+              <Route path="/meetings" element={<MeetingsListPage />} />
+              <Route path="/events" element={<EventsPage />} />
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/files" element={<FilesPage />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              {role === "admin" && <Route path="/admin" element={<AdminPage />} />}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AppLayout>
+        }
+      />
+    </Routes>
   );
 }
 
