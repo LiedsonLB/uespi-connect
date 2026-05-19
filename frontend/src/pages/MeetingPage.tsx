@@ -132,7 +132,6 @@ function Avatar({
           <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
         </div>
       )}
-      {/* FIX 5: hand raised badge */}
       {handRaised && (
         <div
           className="absolute -top-1 -right-1 bg-yellow-400 rounded-full border-2 border-black flex items-center justify-center animate-bounce"
@@ -271,7 +270,6 @@ function ParticipantTile({
           <Avatar name={name} picture={profilePicture} size={72} isSpeaking={isSpeaking} handRaised={handRaised} />
         </div>
       )}
-      {/* FIX 5: hand raised banner on tile */}
       {handRaised && (
         <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 animate-pulse shadow-lg whitespace-nowrap">
           ✋ Mão levantada
@@ -355,7 +353,6 @@ function FloatingReaction({ reaction, onDone }: { reaction: Reaction; onDone: ()
     return () => clearTimeout(t);
   }, [onDone]);
 
-  // FIX 3: render GIF as image, emoji as big text
   const isGifUrl = reaction.emoji.startsWith("http");
 
   return (
@@ -387,7 +384,6 @@ function EmojiPicker({ onSelect, onClose }: { onSelect: (e: string) => void; onC
         <span className="text-white text-sm font-medium">Reações</span>
         <button onClick={onClose} className="text-white/50 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
       </div>
-      {/* FIX 3: larger emoji grid */}
       <div className="grid grid-cols-6 gap-1 mb-3">
         {EMOJI_LIST.map(e => (
           <button key={e} onClick={() => { onSelect(e); onClose(); }}
@@ -396,7 +392,6 @@ function EmojiPicker({ onSelect, onClose }: { onSelect: (e: string) => void; onC
           </button>
         ))}
       </div>
-      {/* FIX 3: GIFs rendered as actual preview images */}
       <div className="border-t border-white/10 pt-2">
         <p className="text-white/50 text-xs mb-2">GIFs rápidos</p>
         <div className="grid grid-cols-3 gap-1.5">
@@ -473,7 +468,6 @@ function ControlsBar({
   reactions: Reaction[]; onReaction: (e: string) => void;
   raisedHands: Set<string>; localHandRaised: boolean; onToggleHand: () => void;
 }) {
-  // FIX 2: mic and cam default to false (muted, no camera)
   const [mic, setMic] = useState(false);
   const [cam, setCam] = useState(false);
   const [screen, setScreen] = useState(false);
@@ -512,7 +506,6 @@ function ControlsBar({
     setCam(!cam);
   };
 
-  // FIX 4: graceful screen share with mobile check
   const toggleScreen = async () => {
     if (!connected) return;
     if (mobile) {
@@ -568,7 +561,6 @@ function ControlsBar({
       {showEmoji && <EmojiPicker onSelect={onReaction} onClose={() => setShowEmoji(false)} />}
 
       <div className="relative flex items-center justify-between px-6 py-3 rounded-2xl bg-[#111827] backdrop-blur-md border-t border-white/5">
-        {/* Left */}
         <div className="flex items-center gap-3 w-48">
           <div className="flex items-center gap-1.5">
             {connected ? <Wifi className="w-3.5 h-3.5 text-green-400" /> : <WifiOff className="w-3.5 h-3.5 text-red-400" />}
@@ -577,7 +569,6 @@ function ControlsBar({
           <div className="flex items-center gap-1 text-white/40 text-xs">
             <Users className="w-3 h-3" /><span>{participantCount}</span>
           </div>
-          {/* FIX 5: raised hands counter */}
           {raisedHands.size > 0 && (
             <div className="flex items-center gap-1 text-yellow-400 text-xs font-semibold animate-pulse">
               <span>✋</span><span>{raisedHands.size}</span>
@@ -585,7 +576,6 @@ function ControlsBar({
           )}
         </div>
 
-        {/* Center */}
         <div className="flex items-end gap-3">
           <Btn active={mic} onClick={toggleMic}
             icon={mic ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
@@ -593,13 +583,11 @@ function ControlsBar({
           <Btn active={cam} onClick={toggleCam}
             icon={cam ? <Camera className="w-5 h-5" /> : <CameraOff className="w-5 h-5" />}
             label={cam ? "Desligar cam" : "Ligar cam"} />
-          {/* FIX 4: disabled on mobile with tooltip */}
           <Btn onClick={toggleScreen} disabled={mobile}
             icon={screen ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
             label={mobile ? "Indisponível" : screen ? "Parar" : "Apresentar"} />
           <Btn onClick={() => setShowEmoji(v => !v)}
             icon={<Smile className="w-5 h-5" />} label="Reações" />
-          {/* FIX 5: highlights yellow when hand is up */}
           <Btn onClick={onToggleHand} highlight={localHandRaised}
             icon={<Hand className="w-5 h-5" />}
             label={localHandRaised ? "Baixar mão" : "Levantar mão"} />
@@ -612,7 +600,6 @@ function ControlsBar({
           </div>
         </div>
 
-        {/* Right */}
         <div className="flex items-end gap-3 w-48 justify-end">
           <Btn onClick={onToggleParticipants} icon={<Users className="w-5 h-5" />}
             label="Participantes" badge={participantCount} />
@@ -645,7 +632,6 @@ function ParticipantsPanel({ participants, onClose, profilePictures, raisedHands
               <p className="text-white text-sm font-medium truncate flex items-center gap-2">
                 {p.name || p.identity}
                 {p instanceof LocalParticipant && <span className="text-white/40 text-xs">(Você)</span>}
-                {/* FIX 5: hand emoji in participants panel */}
                 {raisedHands.has(p.identity) && <span className="text-yellow-400 animate-bounce">✋</span>}
               </p>
             </div>
@@ -670,44 +656,108 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
   const hasCalledLeave = useRef(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [reactions, setReactions] = useState<Reaction[]>([]);
-  // FIX 5: raised hands — set of participant identities
   const [raisedHands, setRaisedHands] = useState<Set<string>>(new Set());
   const localHandRaised = raisedHands.has(userEmail);
 
-  // FIX 1: build profile picture map
+  // FIX 1: build profile picture map com logs
   const profilePictures: Record<string, string> = {};
   if (currentUser?.profilePicture && currentUser?.email) {
     const r = resolveProfilePicture(currentUser.profilePicture);
     if (r) profilePictures[currentUser.email] = r;
+    console.log("📸 Foto do usuário atual:", { email: currentUser.email, url: r });
   }
+  
   participants.forEach(p => {
+    console.log(`🔍 Processando participante ${p.identity}:`, {
+      name: p.name,
+      metadata: p.metadata,
+      metadataType: typeof p.metadata
+    });
+    
     if (p.metadata) {
       try {
         const meta = JSON.parse(p.metadata);
+        console.log(`✅ Metadata parseada para ${p.identity}:`, meta);
         if (meta.profilePicture) {
           const r = resolveProfilePicture(meta.profilePicture);
           if (r) profilePictures[p.identity] = r;
+          console.log(`🖼️ Foto definida para ${p.identity}:`, r);
+        } else {
+          console.log(`⚠️ Sem profilePicture no metadata de ${p.identity}`);
         }
-      } catch {}
+      } catch (err) {
+        console.error(`❌ Erro ao parsear metadata de ${p.identity}:`, err);
+      }
+    } else {
+      console.log(`⚠️ ${p.identity} não tem metadata`);
     }
   });
+
+  // LOG: lista de participantes
+  useEffect(() => {
+    console.log("📋 LISTA DE PARTICIPANTES:", participants.map(p => ({
+      identity: p.identity,
+      name: p.name,
+      metadata: p.metadata,
+      isLocal: p instanceof LocalParticipant
+    })));
+  }, [participants]);
+
+  // LOG: novos participantes entrando/saindo
+  useEffect(() => {
+    const onParticipantConnected = (participant: RemoteParticipant) => {
+      console.log("🟢 NOVO PARTICIPANTE CONECTADO:", {
+        identity: participant.identity,
+        name: participant.name,
+        metadata: participant.metadata,
+        metadataType: typeof participant.metadata
+      });
+    };
+    
+    const onParticipantDisconnected = (participant: RemoteParticipant) => {
+      console.log("🔴 PARTICIPANTE DESCONECTOU:", {
+        identity: participant.identity,
+        name: participant.name
+      });
+    };
+    
+    room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
+    room.on(RoomEvent.ParticipantDisconnected, onParticipantDisconnected);
+    
+    return () => {
+      room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
+      room.off(RoomEvent.ParticipantDisconnected, onParticipantDisconnected);
+    };
+  }, [room]);
 
   // FIX 1: publish our own profile picture as metadata as soon as connected
   useEffect(() => {
     if (!room || !currentUser?.profilePicture) return;
+    
+    const metadata = JSON.stringify({ profilePicture: currentUser.profilePicture });
+    console.log("📤 Enviando meu metadata:", {
+      profilePicture: currentUser.profilePicture,
+      metadataString: metadata
+    });
+    
     room.localParticipant
-      .setMetadata(JSON.stringify({ profilePicture: currentUser.profilePicture }))
-      .catch(() => {});
+      .setMetadata(metadata)
+      .then(() => console.log("✅ Metadata enviado com sucesso"))
+      .catch((err) => console.error("❌ Erro ao enviar metadata:", err));
   }, [room, currentUser?.profilePicture]);
 
-  // Unified data handler
-  const showChatRef = useRef(showChat);
-  showChatRef.current = showChat;
-
+  // LOG: dados recebidos via DataChannel
   useEffect(() => {
     const handler = (data: Uint8Array, p?: RemoteParticipant) => {
+      console.log("📨 Dados recebidos de:", p?.identity || "sistema", {
+        participantName: p?.name,
+        participantMetadata: p?.metadata,
+        dataSize: data.length
+      });
+      
       try {
         const msg = JSON.parse(new TextDecoder().decode(data));
+        console.log("📄 Mensagem parseada:", msg);
 
         if (msg.type === "chat") {
           const senderName = p?.name || p?.identity || msg.user || "Desconhecido";
@@ -723,7 +773,6 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
           setTimeout(() => setReactions(prev => prev.filter(r => r.id !== id)), 3500);
         }
 
-        // FIX 5: hand raise broadcast from remote participants
         if (msg.type === "hand_raise") {
           const identity = p?.identity || msg.identity;
           if (!identity) return;
@@ -738,11 +787,17 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
             return next;
           });
         }
-      } catch {}
+      } catch (err) {
+        console.error("❌ Erro ao parsear dados recebidos:", err);
+      }
     };
+    
     room.on(RoomEvent.DataReceived, handler);
     return () => { room.off(RoomEvent.DataReceived, handler); };
   }, [room]);
+
+  const showChatRef = useRef(showChat);
+  showChatRef.current = showChat;
 
   const handleSendChat = useCallback((text: string) => {
     const payload = new TextEncoder().encode(JSON.stringify({
@@ -765,7 +820,6 @@ function MeetingContent({ showChat: initChat, serverUrl, token, roomName, userEm
     );
   }, [room]);
 
-  // FIX 5: toggle hand + broadcast
   const handleToggleHand = useCallback(() => {
     const newRaised = !localHandRaised;
     setRaisedHands(prev => {
@@ -897,7 +951,6 @@ export default function MeetingPage() {
   useEffect(() => {
     const init = async () => {
       try {
-        // FIX 2: only request audio permission check (don't force cam on load)
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(t => t.stop());
       } catch (err: any) {
@@ -915,18 +968,26 @@ export default function MeetingPage() {
       try {
         setIsLoading(true);
         if (!roomName || !user?.email) throw new Error("Dados inválidos");
+        
+        console.log("📦 Dados enviados para gerar token:", {
+          identity: user.email,
+          name: user.name,
+          metadata: { profilePicture: user.profilePicture || "" }
+        });
+        
         const response = await apiFetch(`/meetings/${roomName}/join`, {
           method: "POST",
           body: JSON.stringify({
             identity: user.email,
             name: user.name || user.email.split("@")[0],
-            // FIX 1: send profile picture in metadata at token time
             metadata: JSON.stringify({ profilePicture: user.profilePicture || "" }),
           }),
         });
         const data = await response.json();
+        console.log("🎫 Token recebido:", data.token ? "Token OK (length: " + data.token.length + ")" : "Sem token");
         setToken(data.token);
       } catch (err: any) {
+        console.error("❌ Erro ao obter token:", err);
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -963,20 +1024,31 @@ export default function MeetingPage() {
   return (
     <div className="overflow-hidden" style={{ height: "calc(100vh - 115px)" }}>
       <LiveKitRoom
-        serverUrl={`${window.location.origin}/livekit`}
+        serverUrl={`${window.location.origin}/livekit`} // prod
+        // serverUrl={import.meta.env.VITE_LIVEKIT_URL || "ws://localhost:7880"} // dev
         token={token}
         connect={true}
-        // FIX 2: enter with mic and camera OFF by default
         audio={false}
         video={false}
-        onConnected={() => toast.success("Conectado à reunião!")}
-        onDisconnected={() => { toast.warning("Você saiu da reunião"); navigate("/meetings"); }}
-        onError={err => toast.error("Erro: " + err.message)}
+        onConnected={() => {
+          console.log("✅ Conectado ao LiveKitRoom");
+          toast.success("Conectado à reunião!");
+        }}
+        onDisconnected={() => { 
+          console.log("❌ Desconectado do LiveKitRoom");
+          toast.warning("Você saiu da reunião"); 
+          navigate("/meetings"); 
+        }}
+        onError={err => {
+          console.error("🔥 Erro no LiveKitRoom:", err);
+          toast.error("Erro: " + err.message);
+        }}
         className="h-full"
       >
         <MeetingContent
           showChat={false}
-          serverUrl={`${window.location.origin}/livekit`}
+          serverUrl={`${window.location.origin}/livekit`} // prod
+          // serverUrl={import.meta.env.VITE_LIVEKIT_URL || "ws://localhost:7880"} //dev
           token={token}
           roomName={roomName!}
           userEmail={user?.email || ""}

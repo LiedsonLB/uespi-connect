@@ -1,4 +1,3 @@
-// frontend/src/contexts/AuthContext.tsx
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { apiFetch } from "@/lib/api";
 
@@ -73,11 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const userData = JSON.parse(storedUser);
             setUser(userData);
           } else {
+            // Criar UserData com os dados da sessão
             const userData: UserData = {
-              name: sessionUser.username,
+              name: sessionUser.name || sessionUser.username.split('@')[0],
               email: sessionUser.username,
               role: sessionUser.role as UserRole,
-              initials: getInitials(sessionUser.username),
+              initials: getInitials(sessionUser.name || sessionUser.username),
+              profilePicture: sessionUser.profile_picture || undefined,
               course: getCourseFromEmail(sessionUser.username),
               id: sessionUser.id,
               username: sessionUser.username,
@@ -102,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (userData: UserData) => {
+    console.log("📸 Login com dados:", userData);
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
   };

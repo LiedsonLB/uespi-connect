@@ -35,7 +35,7 @@ const LoginPage = () => {
     if (email.endsWith("@aluno.uespi.br")) role = "aluno";
     if (email.endsWith("@uespi.br")) role = "professor";
     if (email.endsWith("@prp.uespi.br")) role = "professor";
-    if (email.endsWith("liedson.b9@gmail.com")) role = "admin";
+    if (email === "liedson.b9@gmail.com") role = "admin";
 
     const initials = name
       .split(" ")
@@ -64,17 +64,20 @@ const LoginPage = () => {
       course: getCourseFromEmail(email),
     };
 
-    console.log("User data:", userData);
+    console.log("📸 User data com foto:", userData);
 
     try {
       // senha determinística baseada no Google ID
       const password = `google_${sub.substring(0, 10)}`;
 
+      // Enviar nome e foto no login também
       let response = await apiFetch("/login", {
         method: "POST",
         body: JSON.stringify({
           username: email,
           password,
+          name: name,
+          profile_picture: picture,
         }),
       });
 
@@ -98,11 +101,10 @@ const LoginPage = () => {
         method: "POST",
         body: JSON.stringify({
           username: email,
+          name: name,
+          profile_picture: picture,
           password,
-          role:
-            role === "admin"
-              ? "admin"
-              : "user",
+          role: role === "admin" ? "admin" : "user",
           channel: null,
         }),
       });
@@ -122,6 +124,8 @@ const LoginPage = () => {
         body: JSON.stringify({
           username: email,
           password,
+          name: name,
+          profile_picture: picture,
         }),
       });
 
