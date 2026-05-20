@@ -68,8 +68,8 @@ function getParticipantRole(identity: string): ParticipantRole {
 const EMOJI_LIST = [
   "👍", "❤️", "😂", "😮", "👏", "🎉",
   "🔥", "💯", "🙌", "😍", "🥰", "🤩",
-  "😎", "🫶", "✨", "💪", "🎊", "🥳",
-  "😭", "🤯", "👀", "💀", "🫠", "🫡",
+  "😎", "🤔", "✨", "💪", "🎊", "🥳",
+  "😭", "🤯", "👀", "💀", "😨", "🤦‍♂️",
 ];
 
 const GIF_REACTIONS = [
@@ -77,7 +77,7 @@ const GIF_REACTIONS = [
   { label: "Pensamento", url: "https://media0.giphy.com/media/v1.Y2lkPTZjMDliOTUyYTJ6YmE1cDRpYmgxZnd2ZDN5dWp5amQzYjU4cGNoc2lhZzBtNGtxdSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kNpNw0eB1w4qDYA7hS/giphy_s.gif" },
   { label: "Divino", url: "https://media.giphy.com/media/7rj2ZgttvgomY/giphy.gif" },
   { label: "Assustado", url: "https://www.papodebar.com/wp-content/uploads/2011/05/gato-assustado.gif" },
-  { label: "Palmas", url: "https://media0.giphy.com/media/v1.Y2lkPTZjMDliOTUydmJnNHJiZHpkbm5tYmF2cWJ2cHZ0dWM1ZXY4emZneGoyNnJlZ3M3byZlcD12MV9naWZzX3NlYXJjaCZjdD1n/l3UcFqCm4r6ix9dpS/200w.gif" },
+  { label: "Humrum", url: "https://media0.giphy.com/media/v1.Y2lkPTZjMDliOTUydmJnNHJiZHpkbm5tYmF2cWJ2cHZ0dWM1ZXY4emZneGoyNnJlZ3M3byZlcD12MV9naWZzX3NlYXJjaCZjdD1n/l3UcFqCm4r6ix9dpS/200w.gif" },
   { label: "Incrível", url: "https://media.giphy.com/media/xT0xeJpnrWC4XWblEk/giphy.gif" },
 ];
 
