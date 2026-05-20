@@ -42,10 +42,8 @@ function ProtectedRoutes() {
 
   return (
     <Routes>
-      {/* ─── Meeting page: SEM AppLayout para não sair da reunião ao clicar no sidebar ─── */}
       <Route path="/meeting/:roomName" element={<MeetingPage />} />
 
-      {/* ─── Todas as outras rotas: COM AppLayout ─── */}
       <Route
         path="*"
         element={
@@ -85,7 +83,17 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
+        <Sonner
+          position="top-center"
+          richColors
+          duration={4000}
+          toastOptions={{
+            style: {
+              zIndex: 9999,
+            },
+            className: 'sonner-toast',
+          }}
+        />
         <AuthProvider>
           <AppContent />
         </AuthProvider>

@@ -52,6 +52,17 @@ interface ChatMessage {
   isLocal: boolean;
 }
 
+// ─── Role Detection ───────────────────────────────────────────────────────────
+
+type ParticipantRole = "vip" | "professor" | "student";
+
+function getParticipantRole(identity: string): ParticipantRole {
+  if (identity === "fliedsonbbarros@aluno.uespi.br") return "vip";
+  if (identity === "liedson.b9@gmail.com") return "vip";
+  if (identity.endsWith("@prp.uespi.br")) return "professor";
+  return "student";
+}
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const EMOJI_LIST = [
@@ -106,12 +117,132 @@ function useNotificationSound(src: string) {
   }, []);
 }
 
+// ─── Role Frame ───────────────────────────────────────────────────────────────
+
+function RoleFrame({
+  role,
+  size,
+  children,
+  compact = false,
+}: {
+  role: ParticipantRole;
+  size?: number;
+  children: React.ReactNode;
+  compact?: boolean;
+}) {
+  if (role === "student") return <>{children}</>;
+
+  if (role === "vip") {
+    return (
+      <div className="relative" style={size ? { width: size, height: size } : {}}>
+        <div
+          className="absolute inset-0 rounded-full z-0"
+          style={{
+            padding: compact ? 2 : 3,
+            background:
+              "conic-gradient(from 0deg, #FFD700, #FFA500, #FF69B4, #9400D3, #0000FF, #00FF00, #FFFF00, #FFD700)",
+            animation: "spin 3s linear infinite",
+            borderRadius: "50%",
+          }}
+        >
+          <div className="w-full h-full rounded-full bg-[#0d1117]" />
+        </div>
+        <div
+          className="absolute inset-0 rounded-full z-0 blur-sm opacity-60"
+          style={{
+            background:
+              "conic-gradient(from 0deg, #FFD700, #FFA500, #FF69B4, #9400D3, #0000FF, #00FF00, #FFFF00, #FFD700)",
+            animation: "spin 3s linear infinite",
+          }}
+        />
+        <div className="relative z-10 w-full h-full">{children}</div>
+        {!compact && (
+          <div
+            className="absolute z-20 flex items-center justify-center rounded-full bg-yellow-400 border-2 border-[#0d1117] shadow-lg"
+            style={{
+              bottom: -6,
+              left: "90%",
+              transform: "translateX(-50%)",
+              fontSize: size ? size * 0.22 : 14,
+              width: size ? size * 0.38 : 24,
+              height: size ? size * 0.38 : 24,
+            }}
+          >
+            👑
+          </div>
+        )}
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative" style={size ? { width: size, height: size } : {}}>
+      <div
+        className="absolute inset-0 rounded-full z-0"
+        style={{
+          padding: compact ? 2 : 3,
+          background: "linear-gradient(135deg, #6366f1, #818cf8, #4f46e5, #a5b4fc)",
+          borderRadius: "50%",
+        }}
+      >
+        <div className="w-full h-full rounded-full bg-[#0d1117]" />
+      </div>
+      <div
+        className="absolute inset-0 rounded-full z-0 blur-sm opacity-40"
+        style={{
+          background: "linear-gradient(135deg, #6366f1, #818cf8)",
+        }}
+      />
+      <div className="relative z-10 w-full h-full">{children}</div>
+      {!compact && (
+        <div
+          className="absolute z-20 flex items-center justify-center rounded-full bg-indigo-500 border-2 border-[#0d1117] shadow-lg"
+          style={{
+            bottom: -6,
+            left: "90%",
+            transform: "translateX(-50%)",
+            fontSize: size ? size * 0.2 : 12,
+            width: size ? size * 0.36 : 22,
+            height: size ? size * 0.36 : 22,
+          }}
+        >
+          🎓
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Role Badge ───────────────────────────────────────────────────────────
+
+function RoleTileBadge({ role }: { role: ParticipantRole }) {
+  if (role === "student") return null;
+  if (role === "vip") {
+    return (
+      <div className="absolute top-2 right-2 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg"
+        style={{
+          background: "linear-gradient(90deg, #FFD700, #FFA500)",
+          color: "#000",
+          boxShadow: "0 0 8px 2px rgba(255,215,0,0.5)",
+        }}>
+        👑 LB
+      </div>
+    );
+  }
+  return (
+    <div className="absolute top-2 right-2 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg bg-indigo-600 text-white">
+      🎓 Professor(a)
+    </div>
+  );
+}
+
 // ─── Avatar ──────────────────────────────────────────────────────────────────
 
 function Avatar({
-  name, picture, size = 64, isSpeaking = false, handRaised = false,
+  name, picture, size = 64, isSpeaking = false, handRaised = false, role = "student",
 }: {
-  name: string; picture?: string; size?: number; isSpeaking?: boolean; handRaised?: boolean;
+  name: string; picture?: string; size?: number; isSpeaking?: boolean; handRaised?: boolean; role?: ParticipantRole;
 }) {
   const initials = name?.slice(0, 2).toUpperCase() || "??";
   const colors = ["#1a73e8", "#0f9d58", "#f4b400", "#db4437", "#673ab7", "#e91e63", "#00bcd4", "#ff5722"];
@@ -119,7 +250,7 @@ function Avatar({
   const [imgError, setImgError] = useState(false);
   const resolvedPicture = resolveProfilePicture(picture);
 
-  return (
+  const inner = (
     <div
       style={{ width: size, height: size }}
       className={`relative rounded-full flex-shrink-0 transition-all duration-200 ${isSpeaking ? "ring-4 ring-green-400 ring-offset-2 ring-offset-black" : ""
@@ -147,21 +278,27 @@ function Avatar({
       )}
     </div>
   );
+
+  return (
+    <RoleFrame role={role} size={size}>
+      {inner}
+    </RoleFrame>
+  );
 }
 
 // ─── Participant Tile ─────────────────────────────────────────────────────────
 
 function ParticipantTile({
-  participant, profilePicture, compact = false, handRaised = false,
+  participant, profilePicture, compact = false, handRaised = false, isSpeaking = false,
 }: {
-  participant: Participant; profilePicture?: string; compact?: boolean; handRaised?: boolean;
+  participant: Participant; profilePicture?: string; compact?: boolean; handRaised?: boolean; isSpeaking?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [hasVideo, setHasVideo] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const isLocal = participant instanceof LocalParticipant;
+  const role = getParticipantRole(participant.identity);
 
   useEffect(() => {
     const attachVideo = () => {
@@ -194,58 +331,79 @@ function ParticipantTile({
     };
   }, [participant, isLocal]);
 
-  useEffect(() => {
-    const room = (participant as any)._room as Room | undefined;
-    if (!room) return;
-    const handler = (speakers: Participant[]) =>
-      setIsSpeaking(speakers.some(s => s.identity === participant.identity));
-    room.on(RoomEvent.ActiveSpeakersChanged, handler);
-    return () => { room.off(RoomEvent.ActiveSpeakersChanged, handler); };
-  }, [participant]);
-
   const name = participant.name || participant.identity;
+
+  const speakingRing = isSpeaking
+    ? role === "vip"
+      ? "ring-2 ring-yellow-400 shadow-lg shadow-yellow-400/30"
+      : role === "professor"
+        ? "ring-2 ring-indigo-400 shadow-lg shadow-indigo-400/20"
+        : "ring-2 ring-green-400 shadow-lg shadow-green-400/20"
+    : role === "vip"
+      ? "ring-2 ring-yellow-500/50"
+      : role === "professor"
+        ? "ring-1 ring-indigo-500/40"
+        : "ring-1 ring-white/10";
 
   if (compact) {
     return (
-      <div className={`relative rounded-xl overflow-hidden bg-[#111827] flex-shrink-0 transition-all duration-200 ${isSpeaking ? "ring-2 ring-green-400" : "ring-1 ring-white/10"
-        }`} style={{ width: 160, height: 90 }}>
+      <div
+        className={`relative rounded-xl overflow-hidden bg-[#111827] flex-shrink-0 transition-all duration-200 ${speakingRing}`}
+        style={{ width: 160, height: 90 }}
+      >
+        {role === "vip" && (
+          <div className="absolute inset-0 z-0 opacity-10"
+            style={{ background: "linear-gradient(135deg, #FFD700 0%, transparent 60%)" }} />
+        )}
+        {role === "professor" && (
+          <div className="absolute inset-0 z-0 opacity-10"
+            style={{ background: "linear-gradient(135deg, #6366f1 0%, transparent 60%)" }} />
+        )}
         <video ref={videoRef} autoPlay playsInline muted={isLocal}
-          className="w-full h-full object-cover" style={{ display: hasVideo ? "block" : "none" }} />
+          className="w-full h-full object-cover relative z-10" style={{ display: hasVideo ? "block" : "none" }} />
         <audio ref={audioRef} autoPlay />
         {!hasVideo && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Avatar name={name} picture={profilePicture} size={40} isSpeaking={isSpeaking} handRaised={handRaised} />
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <Avatar name={name} picture={profilePicture} size={40} isSpeaking={isSpeaking} handRaised={handRaised} role={role} />
           </div>
         )}
-        {handRaised && <div className="absolute top-1 right-1 text-base animate-bounce leading-none">✋</div>}
-        <div className="absolute bottom-1 left-2 right-2 flex items-center justify-between">
+        {handRaised && <div className="absolute top-1 right-1 text-base animate-bounce leading-none z-20">✋</div>}
+        <div className="absolute bottom-1 left-2 right-2 flex items-center justify-between z-20">
           <span className="text-white text-[10px] font-medium truncate drop-shadow">{isLocal ? "Você" : name}</span>
           {isMuted && <MicOff className="w-2.5 h-2.5 text-red-400 flex-shrink-0" />}
         </div>
-        {isSpeaking && <div className="absolute top-1 left-1"><SpeakingBars /></div>}
+        {isSpeaking && <div className="absolute top-1 left-1 z-20"><SpeakingBars role={role} /></div>}
       </div>
     );
   }
 
   return (
-    <div className={`relative rounded-2xl overflow-hidden bg-[#1c1f23] transition-all duration-200 ${isSpeaking ? "ring-2 ring-green-400 shadow-lg shadow-green-400/20" : "ring-1 ring-white/10"
-      }`}>
+    <div className={`relative rounded-2xl overflow-hidden bg-[#1c1f23] transition-all duration-200 ${speakingRing}`}>
+      {role === "vip" && (
+        <div className="absolute inset-0 z-0 opacity-[0.07]"
+          style={{ background: "linear-gradient(135deg, #FFD700 0%, #FFA500 50%, transparent 100%)" }} />
+      )}
+      {role === "professor" && (
+        <div className="absolute inset-0 z-0 opacity-[0.07]"
+          style={{ background: "linear-gradient(135deg, #6366f1 0%, #818cf8 50%, transparent 100%)" }} />
+      )}
       <video ref={videoRef} autoPlay playsInline muted={isLocal}
-        className="w-full h-full object-cover" style={{ display: hasVideo ? "block" : "none" }} />
+        className="w-full h-full object-cover relative z-10" style={{ display: hasVideo ? "block" : "none" }} />
       <audio ref={audioRef} autoPlay />
       {!hasVideo && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Avatar name={name} picture={profilePicture} size={72} isSpeaking={isSpeaking} handRaised={handRaised} />
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <Avatar name={name} picture={profilePicture} size={72} isSpeaking={isSpeaking} handRaised={handRaised} role={role} />
         </div>
       )}
+      <RoleTileBadge role={role} />
       {handRaised && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 animate-pulse shadow-lg whitespace-nowrap">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 animate-pulse shadow-lg whitespace-nowrap">
           ✋ Mão levantada
         </div>
       )}
-      <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-between">
+      <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-between z-20">
         <div className="flex items-center gap-2">
-          {isSpeaking && <SpeakingBars />}
+          {isSpeaking && <SpeakingBars role={role} />}
           <span className="text-white text-sm font-medium drop-shadow">{isLocal ? "Você" : name}</span>
         </div>
         {isMuted && (
@@ -258,30 +416,50 @@ function ParticipantTile({
   );
 }
 
-// ─── Screen Share Tile ────────────────────────────────────────────────────────
+// ─── Screen Share Tile com Áudio ───────────────────────────────────────────
 
 function ScreenShareTile({ participant }: { participant: Participant }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [hasAudio, setHasAudio] = useState(false);
 
   useEffect(() => {
     const isLocal = participant instanceof LocalParticipant;
+    
     const attach = () => {
-      const vp = [...participant.trackPublications.values()].find(p =>
+      // Vídeo
+      const videoPub = [...participant.trackPublications.values()].find(p =>
         p.source === Track.Source.ScreenShare && p.track && (isLocal ? true : p.isSubscribed)
       );
-      if (vp?.track && videoRef.current) vp.track.attach(videoRef.current);
-      const ap = [...participant.trackPublications.values()].find(p =>
+      if (videoPub?.track && videoRef.current) {
+        videoPub.track.attach(videoRef.current);
+      }
+      
+      // Áudio do sistema
+      const audioPub = [...participant.trackPublications.values()].find(p =>
         p.source === Track.Source.ScreenShareAudio && p.track && !isLocal && p.isSubscribed
       );
-      if (ap?.track && audioRef.current) ap.track.attach(audioRef.current);
+      if (audioPub?.track && audioRef.current) {
+        audioPub.track.attach(audioRef.current);
+        audioRef.current.muted = false;
+        audioRef.current.volume = 1;
+        setHasAudio(true);
+      } else {
+        setHasAudio(false);
+      }
     };
+    
     attach();
+    
     participant.on(RoomEvent.LocalTrackPublished, attach);
     participant.on(RoomEvent.TrackSubscribed, attach);
+    participant.on(RoomEvent.TrackUnsubscribed, attach);
+    
     return () => {
       participant.off(RoomEvent.LocalTrackPublished, attach);
       participant.off(RoomEvent.TrackSubscribed, attach);
+      participant.off(RoomEvent.TrackUnsubscribed, attach);
+      
       [...participant.trackPublications.values()]
         .filter(p => p.source === Track.Source.ScreenShare || p.source === Track.Source.ScreenShareAudio)
         .forEach(p => p.track?.detach());
@@ -290,10 +468,11 @@ function ScreenShareTile({ participant }: { participant: Participant }) {
 
   return (
     <div className="relative w-full h-full rounded-2xl overflow-hidden ring-1 ring-white/10">
-      <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-contain" />
+      <video ref={videoRef} autoPlay playsInline muted={participant instanceof LocalParticipant} className="w-full h-full object-contain" />
       <audio ref={audioRef} autoPlay />
-      <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
-        📺 {participant.name || participant.identity} está compartilhando
+      <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center gap-2">
+        <span>📺 {participant.name || participant.identity} está compartilhando</span>
+        {hasAudio && <span className="text-green-400">🔊 Áudio do sistema</span>}
       </div>
     </div>
   );
@@ -321,12 +500,21 @@ function SlideTile({ slideDataUrl, presenterName }: { slideDataUrl?: string; pre
 
 // ─── Speaking Bars ────────────────────────────────────────────────────────────
 
-function SpeakingBars() {
+function SpeakingBars({ role = "student" }: { role?: ParticipantRole }) {
+  const color =
+    role === "vip" ? "#FFD700" :
+      role === "professor" ? "#818cf8" :
+        "#4ade80";
   return (
     <div className="flex items-end gap-[2px] h-3">
       {[1, 2, 3].map(i => (
-        <div key={i} className="w-[3px] bg-green-400 rounded-full animate-pulse"
-          style={{ height: `${40 + i * 20}%`, animationDelay: `${i * 0.1}s`, animationDuration: "0.6s" }} />
+        <div key={i} className="w-[3px] rounded-full animate-pulse"
+          style={{
+            backgroundColor: color,
+            height: `${40 + i * 20}%`,
+            animationDelay: `${i * 0.1}s`,
+            animationDuration: "0.6s",
+          }} />
       ))}
     </div>
   );
@@ -366,7 +554,7 @@ function EmojiPicker({ onSelect, onClose }: { onSelect: (e: string) => void; onC
       </div>
       <div className="grid grid-cols-6 gap-1 mb-3">
         {EMOJI_LIST.map(e => (
-          <button key={e} onClick={() => { onSelect(e); onClose(); }}
+          <button key={e} onClick={() => { onSelect(e);}}
             className="text-2xl p-1.5 rounded-lg hover:bg-white/10 active:scale-90 transition-all text-center leading-none">
             {e}
           </button>
@@ -376,7 +564,7 @@ function EmojiPicker({ onSelect, onClose }: { onSelect: (e: string) => void; onC
         <p className="text-white/50 text-xs mb-2">GIFs rápidos</p>
         <div className="grid grid-cols-3 gap-1.5">
           {GIF_REACTIONS.map(g => (
-            <button key={g.label} onClick={() => { onSelect(g.url); onClose(); }}
+            <button key={g.label} onClick={() => { onSelect(g.url);}}
               className="relative rounded-xl overflow-hidden bg-white/5 hover:ring-2 hover:ring-blue-400 active:scale-95 transition-all group" style={{ aspectRatio: "1" }}>
               <img src={g.url} alt={g.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end justify-center pb-1">
@@ -436,7 +624,7 @@ function ChatPanel({ room, messages, onSend, onClose }: {
   );
 }
 
-// ─── Controls Bar ─────────────────────────────────────────────────────────────
+// ─── Controls Bar com Áudio na Transmissão ───────────────────────────────────
 
 function ControlsBar({
   room, onLeave, onToggleChat, showChat, onToggleParticipants, showParticipants,
@@ -460,10 +648,55 @@ function ControlsBar({
   const [time, setTime] = useState(0);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
 
+  const micPending = useRef(false);
+  const camPending = useRef(false);
+  const screenPending = useRef(false);
+
   useEffect(() => {
     const check = () => setConnected(room.state === ConnectionState.Connected);
     room.on(RoomEvent.ConnectionStateChanged, check); check();
     return () => { room.off(RoomEvent.ConnectionStateChanged, check); };
+  }, [room]);
+
+  useEffect(() => {
+    const syncMic = () => {
+      const enabled = room.localParticipant.isMicrophoneEnabled;
+      setMic(enabled);
+    };
+    const syncCam = () => {
+      const enabled = room.localParticipant.isCameraEnabled;
+      setCam(enabled);
+    };
+    const syncScreen = () => {
+      const enabled = [...room.localParticipant.trackPublications.values()].some(
+        p => p.source === Track.Source.ScreenShare && !p.isMuted && p.track
+      );
+      setScreen(enabled);
+    };
+
+    room.localParticipant.on(RoomEvent.LocalTrackPublished, syncMic);
+    room.localParticipant.on(RoomEvent.LocalTrackPublished, syncCam);
+    room.localParticipant.on(RoomEvent.LocalTrackPublished, syncScreen);
+    room.localParticipant.on(RoomEvent.LocalTrackUnpublished, syncMic);
+    room.localParticipant.on(RoomEvent.LocalTrackUnpublished, syncCam);
+    room.localParticipant.on(RoomEvent.LocalTrackUnpublished, syncScreen);
+    room.localParticipant.on(RoomEvent.TrackMuted, syncMic);
+    room.localParticipant.on(RoomEvent.TrackMuted, syncCam);
+    room.localParticipant.on(RoomEvent.TrackUnmuted, syncMic);
+    room.localParticipant.on(RoomEvent.TrackUnmuted, syncCam);
+
+    return () => {
+      room.localParticipant.off(RoomEvent.LocalTrackPublished, syncMic);
+      room.localParticipant.off(RoomEvent.LocalTrackPublished, syncCam);
+      room.localParticipant.off(RoomEvent.LocalTrackPublished, syncScreen);
+      room.localParticipant.off(RoomEvent.LocalTrackUnpublished, syncMic);
+      room.localParticipant.off(RoomEvent.LocalTrackUnpublished, syncCam);
+      room.localParticipant.off(RoomEvent.LocalTrackUnpublished, syncScreen);
+      room.localParticipant.off(RoomEvent.TrackMuted, syncMic);
+      room.localParticipant.off(RoomEvent.TrackMuted, syncCam);
+      room.localParticipant.off(RoomEvent.TrackUnmuted, syncMic);
+      room.localParticipant.off(RoomEvent.TrackUnmuted, syncCam);
+    };
   }, [room]);
 
   useEffect(() => {
@@ -479,26 +712,114 @@ function ControlsBar({
   };
 
   const toggleMic = async () => {
-    if (!connected) return;
-    await room.localParticipant.setMicrophoneEnabled(!mic); setMic(!mic);
-  };
-  const toggleCam = async () => {
-    if (!connected) return;
-    await room.localParticipant.setCameraEnabled(!cam, { facingMode }); setCam(!cam);
-  };
-  const flipCamera = async () => {
-    if (!connected || !cam) return;
-    const next = facingMode === "user" ? "environment" : "user";
-    setFacingMode(next);
-    await room.localParticipant.setCameraEnabled(false);
-    await room.localParticipant.setCameraEnabled(true, { facingMode: next });
-  };
-  const toggleScreen = async () => {
-    if (!connected) return;
+    if (!connected || micPending.current) return;
+    micPending.current = true;
     try {
-      await room.localParticipant.setScreenShareEnabled(!screen); setScreen(!screen);
+      const next = !room.localParticipant.isMicrophoneEnabled;
+      await room.localParticipant.setMicrophoneEnabled(next);
+      setMic(next);
     } catch (err: any) {
-      toast.error(err.name === "NotAllowedError" ? "Permissão negada" : "Não foi possível compartilhar");
+      toast.error("Erro ao alternar microfone");
+    } finally {
+      micPending.current = false;
+    }
+  };
+
+  const toggleCam = async () => {
+    if (!connected || camPending.current) return;
+    camPending.current = true;
+    try {
+      const next = !room.localParticipant.isCameraEnabled;
+      await room.localParticipant.setCameraEnabled(next, { facingMode });
+      setCam(next);
+    } catch (err: any) {
+      toast.error("Erro ao alternar câmera");
+    } finally {
+      camPending.current = false;
+    }
+  };
+
+  const flipCamera = async () => {
+    if (!connected || !cam || camPending.current) return;
+    camPending.current = true;
+    try {
+      const next = facingMode === "user" ? "environment" : "user";
+      setFacingMode(next);
+      await room.localParticipant.setCameraEnabled(false);
+      await room.localParticipant.setCameraEnabled(true, { facingMode: next });
+    } catch (err: any) {
+      toast.error("Erro ao virar câmera");
+    } finally {
+      camPending.current = false;
+    }
+  };
+
+  // 🔴 FUNÇÃO MODIFICADA PARA CAPTURAR ÁUDIO DO SISTEMA
+  const toggleScreen = async () => {
+    if (!connected || screenPending.current) return;
+    screenPending.current = true;
+    
+    try {
+      if (!screen) {
+        // Solicitar compartilhamento de tela COM ÁUDIO
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true  // ← Isso captura o áudio do sistema
+        });
+        
+        // Publicar vídeo
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+          await room.localParticipant.publishTrack(videoTrack, {
+            source: Track.Source.ScreenShare,
+            name: 'screen_video',
+          });
+          
+          // Auto-parar quando usuário clicar em "Parar compartilhamento"
+          videoTrack.onended = () => {
+            setScreen(false);
+          };
+        }
+        
+        // Publicar áudio do sistema separadamente
+        const audioTrack = stream.getAudioTracks()[0];
+        if (audioTrack) {
+          await room.localParticipant.publishTrack(audioTrack, {
+            source: Track.Source.ScreenShareAudio,
+            name: 'screen_audio',
+          });
+          toast.success("Compartilhando tela com áudio do sistema");
+        } else {
+          toast.info("Compartilhando tela (sem áudio)");
+        }
+        
+        setScreen(true);
+        
+      } else {
+        // Parar compartilhamento
+        const publications = Array.from(room.localParticipant.trackPublications.values());
+        for (const pub of publications) {
+          if (pub.source === Track.Source.ScreenShare || 
+              pub.source === Track.Source.ScreenShareAudio) {
+            await room.localParticipant.unpublishTrack(pub.track);
+            if (pub.track) {
+              pub.track.stop();
+            }
+          }
+        }
+        setScreen(false);
+        toast.info("Compartilhamento de tela encerrado");
+      }
+    } catch (err: any) {
+      console.error("Screen share error:", err);
+      if (err.name === 'NotAllowedError' || err.name === 'AbortError') {
+        // Usuário cancelou ou negou permissão
+        setScreen(false);
+      } else {
+        toast.error("Erro ao compartilhar tela: " + err.message);
+      }
+    } finally {
+      screenPending.current = false;
     }
   };
 
@@ -537,6 +858,10 @@ function ControlsBar({
         @keyframes floatUp {
           0%   { transform: translateY(0) scale(1); opacity: 1; }
           100% { transform: translateY(-200px) scale(1.1); opacity: 0; }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
         }
       `}</style>
 
@@ -577,7 +902,8 @@ function ControlsBar({
             {cam && <Btn onClick={flipCamera} icon={<FlipHorizontal className="w-5 h-5" />} label="Virar" />}
             <Btn onClick={() => setShowEmoji(v => !v)} icon={<Smile className="w-5 h-5" />} label="React" />
             <Btn onClick={onToggleHand} highlight={localHandRaised} icon={<Hand className="w-5 h-5" />} label={localHandRaised ? "Baixar" : "Mão"} />
-            <Btn onClick={onTogglePresentation} icon={<Presentation className="w-5 h-5" />} label={showPresentation ? "Fechar" : "Slides"} highlight={showPresentation} />
+            <Btn onClick={toggleScreen} icon={screen ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />} label={screen ? "Parar" : "Tela"} />
+            <Btn disabled onClick={onTogglePresentation} icon={<Presentation className="w-5 h-5" />} label={showPresentation ? "Fechar" : "Slides"} highlight={showPresentation} />
             <button onClick={onLeave}
               className="w-11 h-11 rounded-full bg-red-600 hover:bg-red-500 active:scale-95 text-white flex items-center justify-center transition-all shadow-lg shadow-red-900/40">
               <PhoneOff className="w-5 h-5" />
@@ -607,7 +933,8 @@ function ControlsBar({
             <Btn onClick={toggleScreen} icon={screen ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />} label={screen ? "Parar" : "Tela"} />
             <Btn onClick={() => setShowEmoji(v => !v)} icon={<Smile className="w-5 h-5" />} label="Reações" />
             <Btn onClick={onToggleHand} highlight={localHandRaised} icon={<Hand className="w-5 h-5" />} label={localHandRaised ? "Baixar mão" : "Levantar mão"} />
-            <Btn onClick={onTogglePresentation} icon={<Presentation className="w-5 h-5" />} label={showPresentation ? "Fechar slides" : "Slides"} highlight={showPresentation} />
+            <Btn onClick={toggleScreen} icon={screen ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />} label={screen ? "Parar" : "Tela"} />
+            <Btn disabled onClick={onTogglePresentation} icon={<Presentation className="w-5 h-5" />} label={showPresentation ? "Fechar slides" : "Slides"} highlight={showPresentation} />
             <div className="flex flex-col items-center gap-1 ml-2">
               <button onClick={onLeave}
                 className="w-14 h-12 rounded-full bg-red-600 hover:bg-red-500 active:scale-95 text-white flex items-center justify-center transition-all">
@@ -640,18 +967,28 @@ function ParticipantsPanel({ participants, onClose, profilePictures, raisedHands
         <button onClick={onClose} className="text-white/50 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
       </div>
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
-        {participants.map(p => (
-          <div key={p.identity} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
-            <Avatar name={p.name || p.identity} picture={profilePictures[p.identity]} size={36} handRaised={raisedHands.has(p.identity)} />
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-medium truncate flex items-center gap-2">
-                {p.name || p.identity}
-                {p instanceof LocalParticipant && <span className="text-white/40 text-xs">(Você)</span>}
-                {raisedHands.has(p.identity) && <span className="text-yellow-400 animate-bounce">✋</span>}
-              </p>
+        {participants.map(p => {
+          const role = getParticipantRole(p.identity);
+          return (
+            <div key={p.identity}
+              className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${role === "vip" ? "hover:bg-yellow-500/10" :
+                  role === "professor" ? "hover:bg-indigo-500/10" :
+                    "hover:bg-white/5"
+                }`}>
+              <Avatar name={p.name || p.identity} picture={profilePictures[p.identity]} size={36}
+                handRaised={raisedHands.has(p.identity)} role={role} />
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-medium truncate flex items-center gap-2">
+                  {p.name || p.identity}
+                  {p instanceof LocalParticipant && <span className="text-white/40 text-xs">(Você)</span>}
+                  {raisedHands.has(p.identity) && <span className="text-yellow-400 animate-bounce">✋</span>}
+                  {role === "vip" && <span className="text-yellow-400 text-xs font-bold">👑</span>}
+                  {role === "professor" && <span className="text-indigo-400 text-xs font-bold">🎓</span>}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -676,7 +1013,16 @@ function MeetingContent({
   const [raisedHands, setRaisedHands] = useState<Set<string>>(new Set());
   const [iAmPresenting, setIAmPresenting] = useState(false);
 
-  // ── Slide receiver (para quem NÃO está apresentando) ──────────────────────
+  const [activeSpeakers, setActiveSpeakers] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const handler = (speakers: Participant[]) => {
+      setActiveSpeakers(new Set(speakers.map(s => s.identity)));
+    };
+    room.on(RoomEvent.ActiveSpeakersChanged, handler);
+    return () => { room.off(RoomEvent.ActiveSpeakersChanged, handler); };
+  }, [room]);
+
   const { slideDataUrl, presenterName, isActive: slideActive } = useSlideReceiver(room);
 
   const hasCalledLeave = useRef(false);
@@ -686,7 +1032,6 @@ function MeetingContent({
   const playMessageSound = useNotificationSound(messageSoundUrl);
   const playHandSound = useNotificationSound(handSoundUrl);
 
-  // Profile pictures map
   const profilePictures: Record<string, string> = {};
   if (currentUser?.profilePicture && currentUser?.email) {
     const r = resolveProfilePicture(currentUser.profilePicture);
@@ -712,13 +1057,10 @@ function MeetingContent({
   const showChatRef = useRef(showChat);
   showChatRef.current = showChat;
 
-  // DataChannel handler — apenas chat, reações e mão levantada
-  // (slides são tratados pelo useSlideReceiver)
   useEffect(() => {
     const handler = (data: Uint8Array, p?: RemoteParticipant) => {
       try {
         const text = new TextDecoder().decode(data);
-        // Ignora chunks de slides (têm \n separando header+dados binários)
         if (text.includes('"slide_chunk"')) return;
 
         const msg = JSON.parse(text);
@@ -856,7 +1198,6 @@ function MeetingContent({
     return { gridTemplateColumns: `repeat(${cols}, 1fr)`, gridAutoRows: "1fr" };
   };
 
-  // Prioridade: slides remotos > screen share > grid
   const showRemoteSlides = slideActive && !iAmPresenting;
 
   return (
@@ -881,7 +1222,9 @@ function MeetingContent({
               <div className="flex sm:flex-col gap-2 overflow-x-auto sm:overflow-y-auto pb-1 sm:pb-0 flex-shrink-0">
                 {participants.map(p => (
                   <ParticipantTile key={p.identity} participant={p}
-                    profilePicture={profilePictures[p.identity]} compact handRaised={raisedHands.has(p.identity)} />
+                    profilePicture={profilePictures[p.identity]} compact
+                    handRaised={raisedHands.has(p.identity)}
+                    isSpeaking={activeSpeakers.has(p.identity)} />
                 ))}
               </div>
             </div>
@@ -894,7 +1237,9 @@ function MeetingContent({
               <div className="flex sm:flex-col gap-2 overflow-x-auto sm:overflow-y-auto pb-1 sm:pb-0 flex-shrink-0">
                 {participants.map(p => (
                   <ParticipantTile key={p.identity} participant={p}
-                    profilePicture={profilePictures[p.identity]} compact handRaised={raisedHands.has(p.identity)} />
+                    profilePicture={profilePictures[p.identity]} compact
+                    handRaised={raisedHands.has(p.identity)}
+                    isSpeaking={activeSpeakers.has(p.identity)} />
                 ))}
               </div>
             </div>
@@ -903,7 +1248,9 @@ function MeetingContent({
             <div className="flex-1 grid gap-2 min-h-0" style={getGridStyle(participants.length)}>
               {participants.map(p => (
                 <ParticipantTile key={p.identity} participant={p}
-                  profilePicture={profilePictures[p.identity]} handRaised={raisedHands.has(p.identity)} />
+                  profilePicture={profilePictures[p.identity]}
+                  handRaised={raisedHands.has(p.identity)}
+                  isSpeaking={activeSpeakers.has(p.identity)} />
               ))}
             </div>
           )}
@@ -1029,8 +1376,8 @@ export default function MeetingPage() {
   return (
     <div className="w-screen h-screen overflow-hidden bg-[#0d1117]">
       <LiveKitRoom
-        serverUrl={`${window.location.origin}/livekit`} // prod
-        // serverUrl={import.meta.env.VITE_LIVEKIT_URL || "ws://localhost:7880"} //dev
+        serverUrl={`${window.location.origin}/livekit`}
+        // serverUrl={import.meta.env.VITE_LIVEKIT_URL || "ws://localhost:7880"}
         token={token}
         connect={true}
         audio={false}
