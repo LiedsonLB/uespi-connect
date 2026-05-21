@@ -425,7 +425,7 @@ function ScreenShareTile({ participant }: { participant: Participant }) {
 
   useEffect(() => {
     const isLocal = participant instanceof LocalParticipant;
-    
+
     const attach = () => {
       // Vídeo
       const videoPub = [...participant.trackPublications.values()].find(p =>
@@ -434,7 +434,7 @@ function ScreenShareTile({ participant }: { participant: Participant }) {
       if (videoPub?.track && videoRef.current) {
         videoPub.track.attach(videoRef.current);
       }
-      
+
       // Áudio do sistema
       const audioPub = [...participant.trackPublications.values()].find(p =>
         p.source === Track.Source.ScreenShareAudio && p.track && !isLocal && p.isSubscribed
@@ -448,18 +448,18 @@ function ScreenShareTile({ participant }: { participant: Participant }) {
         setHasAudio(false);
       }
     };
-    
+
     attach();
-    
+
     participant.on(RoomEvent.LocalTrackPublished, attach);
     participant.on(RoomEvent.TrackSubscribed, attach);
     participant.on(RoomEvent.TrackUnsubscribed, attach);
-    
+
     return () => {
       participant.off(RoomEvent.LocalTrackPublished, attach);
       participant.off(RoomEvent.TrackSubscribed, attach);
       participant.off(RoomEvent.TrackUnsubscribed, attach);
-      
+
       [...participant.trackPublications.values()]
         .filter(p => p.source === Track.Source.ScreenShare || p.source === Track.Source.ScreenShareAudio)
         .forEach(p => p.track?.detach());
@@ -554,7 +554,7 @@ function EmojiPicker({ onSelect, onClose }: { onSelect: (e: string) => void; onC
       </div>
       <div className="grid grid-cols-6 gap-1 mb-3">
         {EMOJI_LIST.map(e => (
-          <button key={e} onClick={() => { onSelect(e);}}
+          <button key={e} onClick={() => { onSelect(e); }}
             className="text-2xl p-1.5 rounded-lg hover:bg-white/10 active:scale-90 transition-all text-center leading-none">
             {e}
           </button>
@@ -564,7 +564,7 @@ function EmojiPicker({ onSelect, onClose }: { onSelect: (e: string) => void; onC
         <p className="text-white/50 text-xs mb-2">GIFs rápidos</p>
         <div className="grid grid-cols-3 gap-1.5">
           {GIF_REACTIONS.map(g => (
-            <button key={g.label} onClick={() => { onSelect(g.url);}}
+            <button key={g.label} onClick={() => { onSelect(g.url); }}
               className="relative rounded-xl overflow-hidden bg-white/5 hover:ring-2 hover:ring-blue-400 active:scale-95 transition-all group" style={{ aspectRatio: "1" }}>
               <img src={g.url} alt={g.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end justify-center pb-1">
@@ -758,7 +758,7 @@ function ControlsBar({
   const toggleScreen = async () => {
     if (!connected || screenPending.current) return;
     screenPending.current = true;
-    
+
     try {
       if (!screen) {
         // Solicitar compartilhamento de tela COM ÁUDIO
@@ -766,7 +766,7 @@ function ControlsBar({
           video: true,
           audio: true  // ← Isso captura o áudio do sistema
         });
-        
+
         // Publicar vídeo
         const videoTrack = stream.getVideoTracks()[0];
         if (videoTrack) {
@@ -774,13 +774,13 @@ function ControlsBar({
             source: Track.Source.ScreenShare,
             name: 'screen_video',
           });
-          
+
           // Auto-parar quando usuário clicar em "Parar compartilhamento"
           videoTrack.onended = () => {
             setScreen(false);
           };
         }
-        
+
         // Publicar áudio do sistema separadamente
         const audioTrack = stream.getAudioTracks()[0];
         if (audioTrack) {
@@ -792,15 +792,15 @@ function ControlsBar({
         } else {
           toast.info("Compartilhando tela (sem áudio)");
         }
-        
+
         setScreen(true);
-        
+
       } else {
         // Parar compartilhamento
         const publications = Array.from(room.localParticipant.trackPublications.values());
         for (const pub of publications) {
-          if (pub.source === Track.Source.ScreenShare || 
-              pub.source === Track.Source.ScreenShareAudio) {
+          if (pub.source === Track.Source.ScreenShare ||
+            pub.source === Track.Source.ScreenShareAudio) {
             await room.localParticipant.unpublishTrack(pub.track);
             if (pub.track) {
               pub.track.stop();
@@ -972,8 +972,8 @@ function ParticipantsPanel({ participants, onClose, profilePictures, raisedHands
           return (
             <div key={p.identity}
               className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${role === "vip" ? "hover:bg-yellow-500/10" :
-                  role === "professor" ? "hover:bg-indigo-500/10" :
-                    "hover:bg-white/5"
+                role === "professor" ? "hover:bg-indigo-500/10" :
+                  "hover:bg-white/5"
                 }`}>
               <Avatar name={p.name || p.identity} picture={profilePictures[p.identity]} size={36}
                 handRaised={raisedHands.has(p.identity)} role={role} />
@@ -1386,6 +1386,26 @@ export default function MeetingPage() {
         onDisconnected={() => { toast.warning("Você saiu da reunião"); navigate("/meetings"); }}
         onError={err => toast.error("Erro: " + err.message)}
         className="h-full"
+        options={{
+          publishDefaults: {
+            videoCodec: 'vp9',
+            videoEncoding: {
+              maxBitrate: 4000000,
+              maxFramerate: 60
+            }
+          },
+          audioCaptureDefaults: {
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 2,
+            deviceId: "default",
+            echoCancellation: true,
+            latency: 0,
+            sampleRate: 96000,
+            sampleSize: 24,
+            voiceIsolation: true,
+          },
+        }}
       >
         <MeetingContent
           showChat={false}

@@ -18,7 +18,6 @@ export function NetworkDiagnostic() {
     latency: null,
   });
 
-  // Internet basic
   const checkLatency = async () => {
     const start = Date.now();
     try {
@@ -29,7 +28,6 @@ export function NetworkDiagnostic() {
     }
   };
 
-  // REAL WebRTC test (ICE)
   const checkWebRTC = async () => {
     try {
       const pc = new RTCPeerConnection({
