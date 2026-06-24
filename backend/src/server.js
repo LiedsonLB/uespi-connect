@@ -52,6 +52,7 @@ const corsOptions = {
       'http://127.0.0.1:80',
       'http://neomeet.amsolution.net.br',
       'https://neomeet.amsolution.net.br',
+      'https://www.neomeet.amsolution.net.br'
     ];
 
     console.log('🔍 CORS - Origem recebida:', origin);
@@ -87,7 +88,9 @@ const io = new Server(server, {
     ],
     credentials: true,
     methods: ["GET", "POST"]
-  }
+  },
+  path: '/socket.io/',
+  transports: ['websocket', 'polling']
 });
 
 // Initialize Room Controller
@@ -103,22 +106,22 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   name: 'studio.sid',
-  // cookie: {
-  //   httpOnly: true,
-  //   secure: isProduction,      // ✅ true em produção (HTTPS), false em dev
-  //   sameSite: isProduction ? 'none' : 'lax',  // ✅ 'none' para cross-domain
-  //   maxAge: 24 * 60 * 60 * 1000, // 24 horas
-  //   path: '/',
-  //   domain: isProduction ? '.amsolution.net.br' : undefined  // ✅ domain principal
-  // },
   cookie: {
     httpOnly: true,
-    secure: false,           // sem HTTPS por enquanto
-    sameSite: 'lax',         // lax funciona sem HTTPS
-    maxAge: 24 * 60 * 60 * 1000,
+    secure: isProduction,      // ✅ true em produção (HTTPS), false em dev
+    sameSite: isProduction ? 'none' : 'lax',  // ✅ 'none' para cross-domain
+    maxAge: 24 * 60 * 60 * 1000, // 24 horas
     path: '/',
-    domain: undefined        // remove o domain — sem HTTPS não adianta
+    domain: isProduction ? '.amsolution.net.br' : undefined  // ✅ domain principal
   },
+  // cookie: {
+  //   httpOnly: true,
+  //   secure: false,           // sem HTTPS por enquanto
+  //   sameSite: 'lax',         // lax funciona sem HTTPS
+  //   maxAge: 24 * 60 * 60 * 1000,
+  //   path: '/',
+  //   domain: undefined        // remove o domain — sem HTTPS não adianta
+  // },
   rolling: true,
   proxy: isProduction  // ✅ necessário para HTTPS
 }));
