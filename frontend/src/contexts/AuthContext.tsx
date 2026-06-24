@@ -1,4 +1,3 @@
-// frontend/src/contexts/AuthContext.tsx
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { apiFetch } from "@/lib/api";
 
@@ -54,7 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Verificar sessão ao carregar a página
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -68,19 +66,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const sessionUser = await response.json();
           console.log("✅ Sessão ativa encontrada:", sessionUser);
           
-          // Verificar se tem dados no localStorage
           const storedUser = localStorage.getItem("user");
           
           if (storedUser) {
             const userData = JSON.parse(storedUser);
             setUser(userData);
           } else {
-            // Criar objeto de usuário a partir da sessão
+            // Criar UserData com os dados da sessão
             const userData: UserData = {
-              name: sessionUser.username,
+              name: sessionUser.name || sessionUser.username.split('@')[0],
               email: sessionUser.username,
               role: sessionUser.role as UserRole,
-              initials: getInitials(sessionUser.username),
+              initials: getInitials(sessionUser.name || sessionUser.username),
+              profilePicture: sessionUser.profile_picture || undefined,
               course: getCourseFromEmail(sessionUser.username),
               id: sessionUser.id,
               username: sessionUser.username,
@@ -105,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (userData: UserData) => {
+    console.log("📸 Login com dados:", userData);
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
   };

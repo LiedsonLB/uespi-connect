@@ -21,21 +21,37 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Function to validate if email is allowed
+  const isEmailAllowed = (email: string): boolean => {
+    return (
+      email.endsWith("@aluno.uespi.br") ||
+      email.endsWith("@uespi.br") ||
+      email.endsWith("@prp.uespi.br") ||
+      email === "liedson.b9@gmail.com" ||
+      email === "fliedsonbbarros@gmail.com"
+    );
+  };
+
   const handleLogin = async (googleUser: GoogleUser) => {
     setLoading(true);
     setError(null);
 
     const { email, name, picture, sub } = googleUser;
 
-    // =========================
-    // ROLE BASEADO NO EMAIL
-    // =========================
+    // Check if email is allowed
+    if (!isEmailAllowed(email)) {
+      setError("Acesso negado. Utilize apenas email institucional ou os emails autorizados.");
+      setLoading(false);
+      return;
+    }
+
     let role: UserRole = "aluno";
 
     if (email.endsWith("@aluno.uespi.br")) role = "aluno";
     if (email.endsWith("@uespi.br")) role = "professor";
     if (email.endsWith("@prp.uespi.br")) role = "professor";
-    if (email.endsWith("@gmail.com")) role = "admin";
+    if (email === "liedson.b9@gmail.com") role = "admin";
+    if (email === "fliedsonbbarros@gmail.com") role = "admin";
 
     const initials = name
       .split(" ")
@@ -64,17 +80,20 @@ const LoginPage = () => {
       course: getCourseFromEmail(email),
     };
 
-    console.log("User data:", userData);
+    console.log("📸 User data com foto:", userData);
 
     try {
       // senha determinística baseada no Google ID
       const password = `google_${sub.substring(0, 10)}`;
 
+      // Enviar nome e foto no login também
       let response = await apiFetch("/login", {
         method: "POST",
         body: JSON.stringify({
           username: email,
           password,
+          name: name,
+          profile_picture: picture,
         }),
       });
 
@@ -98,11 +117,10 @@ const LoginPage = () => {
         method: "POST",
         body: JSON.stringify({
           username: email,
+          name: name,
+          profile_picture: picture,
           password,
-          role:
-            role === "admin"
-              ? "admin"
-              : "user",
+          role: role === "admin" ? "admin" : "user",
           channel: null,
         }),
       });
@@ -122,6 +140,8 @@ const LoginPage = () => {
         body: JSON.stringify({
           username: email,
           password,
+          name: name,
+          profile_picture: picture,
         }),
       });
 

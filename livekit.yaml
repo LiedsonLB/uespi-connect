@@ -3,46 +3,9 @@ rtc:
   tcp_port: 7881
   udp_port: 7882
   use_external_ip: true
-  # ice_servers:
-  #   - urls:
-  #       - stun:stun.l.google.com:19302
-  #       - stun:stun1.l.google.com:19302
-  #       - stun:stun2.l.google.com:19302
-  #       - stun:stun3.l.google.com:19302
-  #       - stun:stun4.l.google.com:19302
 
-  #   - urls:
-  #       - turn:openrelay.metered.ca:80
-  #     username: openrelayproject
-  #     credential: openrelayproject
-  #   - urls:
-  #       - turn:openrelay.metered.ca:443
-  #     username: openrelayproject
-  #     credential: openrelayproject
-  #   - urls:
-  #       - turn:openrelay.metered.ca:80?transport=tcp
-  #     username: openrelayproject
-  #     credential: openrelayproject
 keys:
   devkey: 7xK9mP2qR4sT8vW3yZ5cF6hJ1nL4oB8aD0
 
 logging:
   level: info
-
-cors:
-  allowed_origins:
-    - "https://neomeet.amsolution.net.br" 
-    - "http://neomeet.amsolution.net.br"
-    - "https://177.136.252.12"
-    - "http://177.136.252.12"
-    - "http://localhost:*"
-  allowed_methods:
-    - GET
-    - POST
-    - PUT
-    - DELETE
-    - OPTIONS
-  allowed_headers:
-    - "Content-Type"
-    - "Authorization"
-    - "LiveKit-*"

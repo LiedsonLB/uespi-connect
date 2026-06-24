@@ -2,14 +2,27 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/meetings.controller');
+const agentController = require('../controllers/meetings.agent.controller');
+const { requireAuth } = require('../middlewares/auth.middleware');
 
-router.post('/', controller.createMeeting); // nova rota para criar uma reunião
-router.post('/:id/join', controller.joinMeeting); // nova rota para entrar em uma reunião, incrementa o número de participantes
-router.get('/', controller.listMeetings); // listar todas as salas de reunião
-router.get('/:id', controller.getMeeting); // detalhes de uma sala de reunião
-router.get('/:id/participants', controller.getMeetingParticipants); // numero de participantes de uma sala
-router.put('/:id', controller.updateMeeting); // Editar o nome da sala da reunião
-router.delete('/:id', controller.deleteMeeting); // deletar uma sala de reunião
-router.post('/:id/leave', controller.leaveMeeting); // nova rota para sair de uma reunião, decrementa o número de participantes
+// ── Reuniões ──────────────────────────────────────────────────────────────────
+router.post('/',                 controller.createMeeting);
+router.post('/:id/join',         controller.joinMeeting);
+router.get('/',                  controller.listMeetings);
+router.get('/:id',               controller.getMeeting);
+router.get('/:id/participants',  controller.getMeetingParticipants);
+router.put('/:id',               controller.updateMeeting);
+router.delete('/:id',            controller.deleteMeeting);
+router.post('/:id/leave',        controller.leaveMeeting);
+
+// ── Agente IA ─────────────────────────────────────────────────────────────────
+// Convidar o agente para uma sala (chamado pelo frontend — requer login)
+router.post('/:id/invite-agent', requireAuth, agentController.inviteAgent);
+
+// Receber notas do agente Python via aiohttp (chamada interna, sem auth)
+router.post('/notes',   agentController.saveMeetingNote);
+
+// Receber resumo da reunião ao final (chamada interna, sem auth)
+router.post('/summary', agentController.saveMeetingSummary);
 
 module.exports = router;

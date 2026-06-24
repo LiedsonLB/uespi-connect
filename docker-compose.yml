@@ -7,6 +7,8 @@ services:
       POSTGRES_DB: uespi_connect
       POSTGRES_USER: uespi_user
       POSTGRES_PASSWORD: uespi123
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -30,6 +32,8 @@ services:
     build: ./frontend
     container_name: uespi-frontend
     restart: unless-stopped
+    environment:
+      VITE_GOOGLE_CLIENT_ID: 356082850571-rhdr5ji6dclahh910i04mr86cccoi012.apps.googleusercontent.com
     ports:
       - "80:80"
     depends_on:
@@ -42,8 +46,8 @@ services:
     container_name: livekit
     restart: unless-stopped
     ports:
-      - "8081:7880"
-      - "8082:7881"
+      - "7880:7880"
+      - "7881:7881"
       - "7882:7882/udp"
 
     command: --config /etc/livekit.yaml

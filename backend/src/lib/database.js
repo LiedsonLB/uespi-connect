@@ -69,18 +69,6 @@ const initDatabase = async () => {
     
     console.log('✅ Banco de dados inicializado');
     
-    // Inserir usuário admin padrão se não existir
-    const bcrypt = require('bcryptjs');
-    const adminExists = await client.query('SELECT * FROM users WHERE username = $1', ['admin@uespi.br']);
-    
-    if (adminExists.rows.length === 0) {
-      const passwordHash = bcrypt.hashSync('admin123', 10);
-      await client.query(
-        'INSERT INTO users (id, username, password_hash, role, active) VALUES ($1, $2, $3, $4, $5)',
-        ['admin1', 'admin@uespi.br', passwordHash, 'admin', true]
-      );
-      console.log('✅ Usuário admin criado');
-    }
     
     // =============================================
     // MIGRAR USUÁRIOS DO JSON PARA O POSTGRESQL

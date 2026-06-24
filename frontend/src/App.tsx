@@ -41,21 +41,29 @@ function ProtectedRoutes() {
   if (!isLoggedIn) return <Navigate to="/login" replace />;
 
   return (
-    <AppLayout>
-      <Routes>
-        <Route path="/" element={<MeetingsListPage />} />
-        <Route path="/classes" element={<ClassesPage />} />
-        <Route path="/meetings" element={<MeetingsListPage />} />
-        <Route path="/meeting/:roomName" element={<MeetingPage />} />
-        <Route path="/events" element={<EventsPage />} />
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/files" element={<FilesPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        {role === "admin" && <Route path="/admin" element={<AdminPage />} />}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AppLayout>
+    <Routes>
+      <Route path="/meeting/:roomName" element={<MeetingPage />} />
+
+      <Route
+        path="*"
+        element={
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<MeetingsListPage />} />
+              <Route path="/classes" element={<ClassesPage />} />
+              <Route path="/meetings" element={<MeetingsListPage />} />
+              <Route path="/events" element={<EventsPage />} />
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/files" element={<FilesPage />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              {role === "admin" && <Route path="/admin" element={<AdminPage />} />}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AppLayout>
+        }
+      />
+    </Routes>
   );
 }
 
@@ -75,7 +83,17 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
+        <Sonner
+          position="top-center"
+          richColors
+          duration={4000}
+          toastOptions={{
+            style: {
+              zIndex: 9999,
+            },
+            className: 'sonner-toast',
+          }}
+        />
         <AuthProvider>
           <AppContent />
         </AuthProvider>
