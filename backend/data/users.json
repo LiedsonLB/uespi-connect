@@ -7,5 +7,14 @@
     "channel": null,
     "passwordHash": "$2a$10$KLhGJhcgN/TX7Kd/rffCQObe.Wi8A9KX1XYDsJ8DqbmwEJbY9GpeK",
     "active": true
+  },
+  {
+    "id": "3ef1e0461c",
+    "username": "fliedsonbbarros@aluno.uespi.br",
+    "password": "google_1149787160",
+    "role": "aluno",
+    "channel": null,
+    "passwordHash": "$2a$10$CO2bLLYeX.i2POt0WTNVQO8pUFI2Z.wG2FS7BQbgZqIC/q3AeeoX2",
+    "active": true
   }
 ]
